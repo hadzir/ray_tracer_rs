@@ -1,4 +1,4 @@
-use crate::VColor;
+use crate::color::*;
 use std::vec::Vec;
 
 pub struct VCanvas {
@@ -27,7 +27,7 @@ impl VCanvas {
     }
 }
 
-trait ToPPM {
+pub trait ToPPM {
     #[doc(hidden)]
     fn create_ppm_header(&self, width: usize, height: usize, max_color_value: usize) -> Vec<u8> {
         let mut header = Vec::new();
@@ -41,20 +41,22 @@ trait ToPPM {
 
 impl ToPPM for VCanvas {
     fn to_ppm(&self) -> Vec<u8> {
-        let mut byte_array=self.create_ppm_header(self.width, self.height, 255);
-        
-        for y in 0..self.height{
-            let mut row_string=String::new();
-            for x in 0..self.width{
-                let pixel= self.pixel_at(x, y);
-                row_string += & pixel.to_rgb_str();
+        let mut byte_array = self.create_ppm_header(self.width, self.height, 255);
 
-                if (x+1)<self.width{row_string += " ";};
+        for y in 0..self.height {
+            let mut row_string = String::new();
+            for x in 0..self.width {
+                let pixel = self.pixel_at(x, y);
+                row_string += &pixel.to_rgb_str();
+
+                if (x + 1) < self.width {
+                    row_string += " ";
+                };
             }
             row_string += "\n";
             byte_array.extend(row_string.into_bytes());
         }
-        return byte_array
+        return byte_array;
     }
 }
 #[cfg(test)]
@@ -103,9 +105,9 @@ mod tests {
         cnv.write_pixel(0, 2, c3);
 
         let result = cnv.to_ppm();
-        let mut expected_result = String::from("P3\n2 3\n255\n").into_bytes();
-        let expected_pixel_data = String::from("255 0 0 0 0 0\n0 128 0 0 0 0\n0 0 255 0 0 0\n").into_bytes();
-        expected_result.extend(expected_pixel_data);
+        let expected_result =
+            String::from("P3\n2 3\n255\n255 0 0 0 0 0\n0 128 0 0 0 0\n0 0 255 0 0 0\n")
+                .into_bytes();
 
         assert_eq!(result, expected_result)
     }

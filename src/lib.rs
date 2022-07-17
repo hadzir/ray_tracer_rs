@@ -1,11 +1,7 @@
-mod tuple;
-pub use tuple::VTuple;
+pub mod tuple;
 
-mod utils;
-pub use utils::f64_zequals;
+pub mod utils;
 
-mod color;
-pub use color::VColor;
+pub mod color;
 
-mod canvas;
-pub use canvas::VCanvas;
+pub mod canvas;

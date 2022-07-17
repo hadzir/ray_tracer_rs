@@ -1,4 +1,4 @@
-use ray_tracer::VTuple;
+use ray_tracer::tuple::*;
 
 
 fn main() {
