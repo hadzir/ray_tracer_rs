@@ -1,7 +1,7 @@
 use crate::utils::f64_zequals;
 use std::ops;
 
-#[derive(Debug,Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct VColor {
     pub r: f64,
     pub g: f64,
@@ -22,6 +22,10 @@ impl VColor {
     }
     pub fn blue() -> Self {
         Self::new( 0.0, 0.0, 1.0 )
+    }
+    pub fn to_rgb_str(&self)->String{
+        let convert = |f:f64|->u8{((f*255.0).round()).clamp(0.0,255.0) as u8};
+        return format!("{} {} {}", convert(self.r),convert(self.g),convert(self.b))
     }
 }
 /*
