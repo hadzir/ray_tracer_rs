@@ -21,6 +21,14 @@ impl VTuple {
             w: w,
         }
     }
+    pub fn default() -> Self {
+        Self {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            w: 0.0,
+        }
+    }
     pub fn point(x: f64, y: f64, z: f64) -> Self {
         Self {
             x: x,
