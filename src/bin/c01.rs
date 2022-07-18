@@ -23,21 +23,21 @@ fn main() {
 }
 #[derive(Debug)]
 struct Environment {
-    gravity: VTuple,
-    wind: VTuple,
+    gravity: VTuple<f64>,
+    wind: VTuple<f64>,
 }
 impl Environment {
-    pub fn new(gravity: VTuple, wind: VTuple) -> Self {
+    pub fn new(gravity: VTuple<f64>, wind: VTuple<f64>) -> Self {
         Environment { gravity, wind }
     }
 }
 #[derive(Debug)]
 struct Projectile {
-    position: VTuple,
-    velocity: VTuple,
+    position: VTuple<f64>,
+    velocity: VTuple<f64>,
 }
 impl Projectile {
-    pub fn new(position: VTuple, velocity: VTuple) -> Self {
+    pub fn new(position: VTuple<f64>, velocity: VTuple<f64>) -> Self {
         Projectile { position, velocity }
     }
 }

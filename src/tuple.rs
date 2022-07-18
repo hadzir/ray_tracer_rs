@@ -1,19 +1,27 @@
 use std::ops;
 
+use num_traits::Float;
+
 use crate::zequality::ZEq;
 
 #[derive(Debug, Copy, Clone)]
-pub struct VTuple {
-    pub x: f64,
-    pub y: f64,
-    pub z: f64,
-    pub w: f64,
+pub struct VTuple<T>
+where
+    T: Float,
+{
+    pub x: T,
+    pub y: T,
+    pub z: T,
+    pub w: T,
 }
 /*
     VTuple type implementation
 */
-impl VTuple {
-    pub fn new(x: f64, y: f64, z: f64, w: f64) -> Self {
+impl<T> VTuple<T>
+where
+    T: Float,
+{
+    pub fn new(x: T, y: T, z: T, w: T) -> Self {
         Self {
             x: x,
             y: y,
@@ -23,40 +31,36 @@ impl VTuple {
     }
     pub fn default() -> Self {
         Self {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
-            w: 0.0,
+            x: T::zero(),
+            y: T::zero(),
+            z: T::zero(),
+            w: T::zero(),
         }
     }
-    pub fn point(x: f64, y: f64, z: f64) -> Self {
+    pub fn point(x: T, y: T, z: T) -> Self {
         Self {
             x: x,
             y: y,
             z: z,
-            w: 1.0,
+            w: T::one(),
         }
     }
-    pub fn vector(x: f64, y: f64, z: f64) -> Self {
+    pub fn vector(x: T, y: T, z: T) -> Self {
         Self {
             x: x,
             y: y,
             z: z,
-            w: 0.0,
+            w: T::zero(),
         }
     }
     pub fn is_point(&self) -> bool {
-        return self.w != 0.0;
+        return self.w != T::zero();
     }
     pub fn is_vector(&self) -> bool {
-        return self.w == 0.0;
+        return self.w == T::zero();
     }
-}
-/*
-    VTuple math implementation
-*/
-impl VTuple {
-    pub fn magnitude(&self) -> f64 {
+
+    pub fn magnitude(&self) -> T {
         return (self.x.powi(2) + self.y.powi(2) + self.z.powi(2) + self.w.powi(2)).sqrt();
     }
 
@@ -64,7 +68,7 @@ impl VTuple {
         return *self / self.magnitude();
     }
 
-    pub fn dot(&self, &other: &Self) -> f64 {
+    pub fn dot(&self, &other: &Self) -> T {
         return self.x * other.x + self.y * other.y + self.z * other.z + self.w * other.w;
     }
 
@@ -81,7 +85,10 @@ impl VTuple {
     }
 }
 
-impl ops::Add<Self> for VTuple {
+impl<T> ops::Add<Self> for VTuple<T>
+where
+    T: Float,
+{
     type Output = Self;
 
     fn add(self, other: Self) -> Self::Output {
@@ -93,7 +100,10 @@ impl ops::Add<Self> for VTuple {
         )
     }
 }
-impl ops::Sub<Self> for VTuple {
+impl<T> ops::Sub<Self> for VTuple<T>
+where
+    T: Float,
+{
     type Output = Self;
 
     fn sub(self, other: Self) -> Self::Output {
@@ -106,17 +116,23 @@ impl ops::Sub<Self> for VTuple {
     }
 }
 
-impl ops::Neg for VTuple {
+impl<T> ops::Neg for VTuple<T>
+where
+    T: Float,
+{
     type Output = Self;
 
     fn neg(self) -> Self::Output {
         VTuple::new(-self.x, -self.y, -self.z, -self.w)
     }
 }
-impl ops::Mul<f64> for VTuple {
+impl<T> ops::Mul<T> for VTuple<T>
+where
+    T: Float,
+{
     type Output = Self;
 
-    fn mul(self, multiplier: f64) -> Self::Output {
+    fn mul(self, multiplier: T) -> Self::Output {
         VTuple::new(
             self.x * multiplier,
             self.y * multiplier,
@@ -125,10 +141,13 @@ impl ops::Mul<f64> for VTuple {
         )
     }
 }
-impl ops::Div<f64> for VTuple {
+impl<T> ops::Div<T> for VTuple<T>
+where
+    T: Float,
+{
     type Output = Self;
 
-    fn div(self, multiplier: f64) -> Self::Output {
+    fn div(self, multiplier: T) -> Self::Output {
         VTuple::new(
             self.x / multiplier,
             self.y / multiplier,
@@ -137,14 +156,14 @@ impl ops::Div<f64> for VTuple {
         )
     }
 }
-
 // Perhaps implement own assert_zeq! with custom zequal trait and macro?
-impl ZEq<VTuple> for VTuple {
-    fn zeq(&self, other: &Self) -> bool {
-        self.x.zeq(&other.x)
-            && self.y.zeq(&other.y)
-            && self.z.zeq(&other.z)
-            && self.w.zeq(&other.w)
+impl<T> ZEq<Self> for VTuple<T>
+where
+    T: Float,
+    T: ZEq<T>,
+{
+    fn zeq(&self, other: Self) -> bool {
+        self.x.zeq(other.x) && self.y.zeq(other.y) && self.z.zeq(other.z) && self.w.zeq(other.w)
     }
 }
 

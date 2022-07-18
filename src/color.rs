@@ -70,10 +70,10 @@ impl ops::Mul<VColor> for VColor {
 }
 // Perhaps implement own assert_zeq! with custom zequal trait and macro?
 impl PartialEq for VColor {
-    fn eq(&self, other: &Self) -> bool {
-        self.r.zeq(&other.r)
-            && self.g.zeq(&other.g)
-            && self.b.zeq(&other.b)
+    fn eq(&self, other: &VColor) -> bool {
+        self.r.zeq(other.r)
+            && self.g.zeq(other.g)
+            && self.b.zeq(other.b)
     }
 }
 #[cfg(test)]
