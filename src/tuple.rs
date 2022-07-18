@@ -1,6 +1,6 @@
 use std::ops;
 
-use crate::utils::f64_zequals;
+use crate::zequality::ZEq;
 
 #[derive(Debug, Copy, Clone)]
 pub struct VTuple {
@@ -72,9 +72,7 @@ impl VTuple {
         );
     }
 }
-/*
-    VTuple operators implementation
-*/
+
 impl ops::Add<Self> for VTuple {
     type Output = Self;
 
@@ -133,12 +131,12 @@ impl ops::Div<f64> for VTuple {
 }
 
 // Perhaps implement own assert_zeq! with custom zequal trait and macro?
-impl PartialEq for VTuple {
-    fn eq(&self, other: &Self) -> bool {
-        f64_zequals(self.x, other.x, None)
-            && f64_zequals(self.y, other.y, None)
-            && f64_zequals(self.z, other.z, None)
-            && f64_zequals(self.w, other.w, None)
+impl ZEq<VTuple> for VTuple {
+    fn zeq(&self, other: &Self) -> bool {
+        self.x.zeq(&other.x)
+            && self.y.zeq(&other.y)
+            && self.z.zeq(&other.z)
+            && self.w.zeq(&other.w)
     }
 }
 
@@ -177,7 +175,7 @@ mod tests {
         let tuple1 = VTuple::new(1.0, 1.0, 1.0, 1.0);
         let tuple2 = VTuple::new(2.0, 2.0, 2.0, 2.0);
         let expected_tuple = VTuple::new(3.0, 3.0, 3.0, 3.0);
-        assert_eq!(tuple1 + tuple2, expected_tuple)
+        assert_zeq!(tuple1 + tuple2, expected_tuple)
     }
     #[test]
     fn tuples_can_be_subtracted() {
@@ -187,7 +185,7 @@ mod tests {
         let result = tuple1 - tuple2;
 
         assert!(result.is_vector());
-        assert_eq!(result, expected_result)
+        assert_zeq!(result, expected_result)
     }
 
     #[test]
@@ -199,7 +197,7 @@ mod tests {
         let result = p - v;
 
         assert!(result.is_point());
-        assert_eq!(result, expected_result)
+        assert_zeq!(result, expected_result)
     }
     #[test]
     fn subtracting_two_vector() {
@@ -210,7 +208,7 @@ mod tests {
         let result = v1 - v2;
 
         assert!(result.is_vector());
-        assert_eq!(result, expected_result)
+        assert_zeq!(result, expected_result)
     }
     #[test]
     fn subtracting_a_vector_from_the_zero_vector() {
@@ -221,7 +219,7 @@ mod tests {
         let result = v1 - v2;
 
         assert!(result.is_vector());
-        assert_eq!(result, expected_result)
+        assert_zeq!(result, expected_result)
     }
     #[test]
     fn negating_a_tuple() {
@@ -230,7 +228,7 @@ mod tests {
         let expected_result = VTuple::new(-1.0, -2.0, -3.0, -4.0);
         let result = -v1;
 
-        assert_eq!(result, expected_result)
+        assert_zeq!(result, expected_result)
     }
     #[test]
     fn scalar_multiplication() {
@@ -240,7 +238,7 @@ mod tests {
         let expected_result = VTuple::new(2.0, 4.0, 6.0, 8.0);
         let result = v1 * multiplier;
 
-        assert_eq!(result, expected_result);
+        assert_zeq!(result, expected_result);
     }
     #[test]
     fn multiplying_a_tuple_by_a_fraction() {
@@ -250,7 +248,7 @@ mod tests {
         let expected_result = VTuple::new(0.5, 1.0, 1.5, 2.0);
         let result = v1 * multiplier;
 
-        assert_eq!(result, expected_result);
+        assert_zeq!(result, expected_result);
     }
     #[test]
     fn dividing_a_tuple_by_a_scalar() {
@@ -260,7 +258,7 @@ mod tests {
         let expected_result = VTuple::new(0.5, 1.0, 1.5, 2.0);
         let result = v1 / dividor;
 
-        assert_eq!(result, expected_result);
+        assert_zeq!(result, expected_result);
     }
     #[test]
     fn dividing_a_tuple_by_a_fraction() {
@@ -270,7 +268,7 @@ mod tests {
         let expected_result = VTuple::new(2.0, 4.0, 6.0, 8.0);
         let result = v1 / dividor;
 
-        assert_eq!(result, expected_result);
+        assert_zeq!(result, expected_result);
     }
     #[test]
     fn compute_magnitude_of_vector_1_0_0() {
@@ -279,7 +277,7 @@ mod tests {
         let result = v.magnitude();
         let expected_result = 1.0;
 
-        assert_eq!(result, expected_result);
+        assert_zeq!(result, expected_result);
     }
     #[test]
     fn compute_magnitude_of_vector_3_4_0() {
@@ -288,7 +286,7 @@ mod tests {
         let result = v.magnitude();
         let expected_result = 5.0;
 
-        assert_eq!(result, expected_result);
+        assert_zeq!(result, expected_result);
     }
     #[test]
     fn compute_magnitude_of_vector_0_3_4() {
@@ -297,7 +295,7 @@ mod tests {
         let result = v.magnitude();
         let expected_result = 5.0;
 
-        assert_eq!(result, expected_result);
+        assert_zeq!(result, expected_result);
     }
     #[test]
     fn compute_magnitude_of_vector_1_2_3() {
@@ -306,7 +304,7 @@ mod tests {
         let result = v.magnitude();
         let expected_result = (14.0 as f64).sqrt();
 
-        assert_eq!(result, expected_result);
+        assert_zeq!(result, expected_result);
     }
     #[test]
     fn compute_magnitude_of_vector_n1_n2_n3() {
@@ -315,7 +313,7 @@ mod tests {
         let result = v.magnitude();
         let expected_result = (14.0 as f64).sqrt();
 
-        assert_eq!(result, expected_result);
+        assert_zeq!(result, expected_result);
     }
 
     #[test]
@@ -325,7 +323,7 @@ mod tests {
         let result = v.normalize();
         let expected_result = VTuple::vector(1.0, 0.0, 0.0);
 
-        assert_eq!(result, expected_result);
+        assert_zeq!(result, expected_result);
     }
     #[test]
     fn normalize_vector_1_2_3() {
@@ -334,7 +332,7 @@ mod tests {
         let result = v.normalize();
         let expected_result = VTuple::vector(0.26726, 0.53452, 0.80178);
 
-        assert_eq!(result, expected_result);
+        assert_zeq!(result, expected_result);
     }
     #[test]
     fn magnitude_of_normalized_vector_is_1() {
@@ -343,7 +341,7 @@ mod tests {
         let result = v.normalize().magnitude();
         let expected_result = 1.0;
 
-        assert_eq!(result, expected_result);
+        assert_zeq!(result, expected_result);
     }
     #[test]
     fn dot_product_of_two_vectors() {
@@ -353,7 +351,7 @@ mod tests {
         let result = v1.dot(&v2);
         let expected_result = 20.0;
 
-        assert_eq!(result, expected_result);
+        assert_zeq!(result, expected_result);
     }
     #[test]
     fn cross_product_of_two_vectors1() {
@@ -364,7 +362,7 @@ mod tests {
         let expected_result = VTuple::vector(-1.0, 2.0, -1.0);
 
         assert!(result.is_vector());
-        assert_eq!(result, expected_result);
+        assert_zeq!(result, expected_result);
     }
     #[test]
     fn cross_product_of_two_vectors2() {
@@ -375,6 +373,6 @@ mod tests {
         let expected_result = VTuple::vector(1.0, -2.0, 1.0);
 
         assert!(result.is_vector());
-        assert_eq!(result, expected_result);
+        assert_zeq!(result, expected_result);
     }
 }

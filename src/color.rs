@@ -1,5 +1,6 @@
-use crate::utils::f64_zequals;
 use std::ops;
+
+use crate::zequality::ZEq;
 
 #[derive(Debug, Clone, Copy)]
 pub struct VColor {
@@ -70,9 +71,9 @@ impl ops::Mul<VColor> for VColor {
 // Perhaps implement own assert_zeq! with custom zequal trait and macro?
 impl PartialEq for VColor {
     fn eq(&self, other: &Self) -> bool {
-        f64_zequals(self.r, other.r, None)
-            && f64_zequals(self.g, other.g, None)
-            && f64_zequals(self.b, other.b, None)
+        self.r.zeq(&other.r)
+            && self.g.zeq(&other.g)
+            && self.b.zeq(&other.b)
     }
 }
 #[cfg(test)]

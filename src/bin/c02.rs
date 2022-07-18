@@ -77,7 +77,7 @@ impl Pixel {
         let screen_x = point.x.round() as usize;
         let screen_y = canvas.height - point.y.round() as usize;
 
-        if (screen_x < 0 || screen_x >= canvas.width) || (screen_y < 0 || screen_y >= canvas.height)
+        if (screen_x >= canvas.width) || (screen_y >= canvas.height)
         {
             return Pixel::OutOfBounds;
         } else {
