@@ -4,10 +4,6 @@ use num_traits::Float;
 use std::convert::From;
 use std::ops::{self, AddAssign};
 
-type Matrix4f = VMatrix<f64, 4>;
-type Matrix3f = VMatrix<f64, 3>;
-type Matrix2f = VMatrix<f64, 2>;
-
 /*
 _______________________________________ DxD generics _____________________________________________
 */
@@ -93,6 +89,60 @@ where
     T: Float,
     T: AddAssign,
 {
+    #[rustfmt::skip]
+    pub fn shearing(xy:T,xz:T,yx:T,yz:T,zx:T,zy:T) -> VMatrix<T, 4> {
+        VMatrix::from([
+            [T::one(),  xy,         xz,         T::zero()],
+            [yx,        T::one(),   yz,         T::zero()],
+            [zx,        zy,         T::one(),   T::zero()],
+            [T::zero(), T::zero(),  T::zero(),  T::one()],
+        ])
+    }
+    #[rustfmt::skip]
+    pub fn rotation_x(ang: T) -> VMatrix<T, 4> {
+        VMatrix::from([
+            [T::one(),  T::zero(),  T::zero(),  T::zero()],
+            [T::zero(), ang.cos(), -ang.sin(),  T::zero()],
+            [T::zero(), ang.sin(),  ang.cos(),  T::zero()],
+            [T::zero(), T::zero(),  T::zero(),  T::one()],
+        ])
+    }
+    #[rustfmt::skip]
+    pub fn rotation_y(ang: T) -> VMatrix<T, 4> {
+        VMatrix::from([
+            [ang.cos(), T::zero(),  ang.sin(),  T::zero()],
+            [T::zero(), T::one(),   T::zero(),  T::zero()],
+            [-ang.sin(),T::zero(),  ang.cos(),  T::zero()],
+            [T::zero(), T::zero(),  T::zero(),  T::one()],
+        ])
+    }
+    #[rustfmt::skip]
+    pub fn rotation_z(ang: T) -> VMatrix<T, 4> {
+        VMatrix::from([
+            [ang.cos(),-ang.sin(),  T::zero(),  T::zero()],
+            [ang.sin(), ang.cos(),  T::zero(),  T::zero()],
+            [T::zero(), T::zero(),  T::one(),   T::zero()],
+            [T::zero(), T::zero(),  T::zero(),  T::one()],
+        ])
+    }
+    #[rustfmt::skip]
+    pub fn translation(x: T, y: T, z: T) -> VMatrix<T, 4> {
+        VMatrix::from([
+            [T::one(),  T::zero(),  T::zero(),  x],
+            [T::zero(), T::one(),   T::zero(),  y],
+            [T::zero(), T::zero(),  T::one(),   z],
+            [T::zero(), T::zero(),  T::zero(),  T::one()],
+        ])
+    }
+    #[rustfmt::skip]
+    pub fn scaling(x: T, y: T, z: T) -> VMatrix<T, 4> {
+        VMatrix::from([
+            [x,         T::zero(),  T::zero(),  T::zero()],
+            [T::zero(), y,          T::zero(),  T::zero()],
+            [T::zero(), T::zero(),  z,          T::zero()],
+            [T::zero(), T::zero(),  T::zero(),  T::one()],
+        ])
+    }
     pub fn identity() -> VMatrix<T, 4> {
         let mut result: VMatrix<T, 4> = VMatrix::default();
         for i in 0..4 {
@@ -298,6 +348,11 @@ where
 
 #[cfg(test)]
 mod test {
+    use std::f64::consts::PI;
+    type Matrix4f = VMatrix<f64, 4>;
+    type Matrix3f = VMatrix<f64, 3>;
+    type Matrix2f = VMatrix<f64, 2>;
+
     use crate::tuple::VTuple;
 
     use super::*;
@@ -651,4 +706,256 @@ mod test {
         ]);
         assert_zeq!(m.inverted() * m, Matrix4f::identity())
     }
+    #[test]
+    fn multiplying_by_a_translation_matrix() {
+        let t = VMatrix::translation(5.0, -3.0, 2.0);
+        let p = VTuple::point(-3.0, 4.0, 5.0);
+
+        let result = t * p;
+        let expected_result = VTuple::point(2.0, 1.0, 7.0);
+
+        assert_zeq!(result, expected_result);
+    }
+    #[test]
+    fn multiplying_by_the_inverse_of_a_translation_matrix() {
+        let t = VMatrix::translation(5.0, -3.0, 2.0);
+        let p = VTuple::point(-3.0, 4.0, 5.0);
+
+        let result = t.inverted() * p;
+        let expected_result = VTuple::point(-8.0, 7.0, 3.0);
+
+        assert_zeq!(result, expected_result);
+    }
+
+    #[test]
+    fn translation_does_not_affect_vectors() {
+        let t = VMatrix::translation(5.0, -3.0, 2.0);
+        let v = VTuple::vector(-3.0, 4.0, 5.0);
+
+        let result = t * v;
+        let expected_result = v;
+
+        assert_zeq!(result, expected_result);
+    }
+
+    #[test]
+    fn a_scaling_matrix_applied_to_a_point() {
+        let t = VMatrix::scaling(2.0, 3.0, 4.0);
+        let p = VTuple::point(-4.0, 6.0, 8.0);
+
+        let result = t * p;
+        let expected_result = VTuple::point(-8.0, 18.0, 32.0);
+
+        assert_zeq!(result, expected_result);
+    }
+
+    #[test]
+    fn a_scaling_matrix_applied_to_a_vector() {
+        let t = VMatrix::scaling(2.0, 3.0, 4.0);
+        let v = VTuple::vector(-4.0, 6.0, 8.0);
+
+        let result = t * v;
+        let expected_result = VTuple::vector(-8.0, 18.0, 32.0);
+
+        assert_zeq!(result, expected_result);
+    }
+
+    #[test]
+    fn multiplying_by_the_inverse_of_a_scaling_matrix() {
+        let t = VMatrix::scaling(2.0, 3.0, 4.0);
+        let v = VTuple::vector(-4.0, 6.0, 8.0);
+
+        let result = t.inverted() * v;
+        let expected_result = VTuple::vector(-2.0, 2.0, 2.0);
+
+        assert_zeq!(result, expected_result);
+    }
+
+    #[test]
+    fn reflection_is_scaling_by_a_negative_value() {
+        let t = VMatrix::scaling(-1.0, 1.0, 1.0);
+        let p = VTuple::point(2.0, 3.0, 4.0);
+
+        let result = t * p;
+        let expected_result = VTuple::point(-2.0, 3.0, 4.0);
+
+        assert_zeq!(result, expected_result);
+    }
+    #[test]
+    fn rotating_a_point_around_the_x_axis() {
+        let half_quarter = VMatrix::rotation_x(PI / 4.0);
+        let full_quarter = VMatrix::rotation_x(PI / 2.0);
+        let p = VTuple::point(0.0, 1.0, 0.0);
+
+        assert_zeq!(
+            half_quarter * p,
+            VTuple::point(0.0, (2.0).sqrt() / 2.0, (2.0).sqrt() / 2.0)
+        );
+
+        assert_zeq!(full_quarter * p, VTuple::point(0.0, 0.0, 1.0));
+    }
+
+    #[test]
+    fn the_inverse_of_an_x_rotation_rotates_in_the_opposite_direction() {
+        let half_quarter = VMatrix::rotation_x(PI / 4.0);
+        let full_quarter = VMatrix::rotation_x(PI / 2.0);
+        let inverse_half_quarter = half_quarter.inverted();
+        let inverse_full_quarter = full_quarter.inverted();
+
+        let p = VTuple::point(0.0, 1.0, 0.0);
+
+        assert_zeq!(
+            inverse_half_quarter * p,
+            VTuple::point(0.0, (2.0).sqrt() / 2.0, -(2.0).sqrt() / 2.0)
+        );
+
+        assert_zeq!(inverse_full_quarter * p, VTuple::point(0.0, 0.0, -1.0));
+    }
+
+    #[test]
+    fn rotating_a_point_around_the_y_axis() {
+        let half_quarter = VMatrix::rotation_y(PI / 4.0);
+        let full_quarter = VMatrix::rotation_y(PI / 2.0);
+        let p = VTuple::point(0.0, 0.0, 1.0);
+
+        assert_zeq!(
+            half_quarter * p,
+            VTuple::point((2.0).sqrt() / 2.0, 0.0, (2.0).sqrt() / 2.0)
+        );
+
+        assert_zeq!(full_quarter * p, VTuple::point(1.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn rotating_a_point_around_the_z_axis() {
+        let half_quarter = VMatrix::rotation_z(PI / 4.0);
+        let full_quarter = VMatrix::rotation_z(PI / 2.0);
+        let p = VTuple::point(0.0, 1.0, 0.0);
+
+        assert_zeq!(
+            half_quarter * p,
+            VTuple::point(-(2.0).sqrt() / 2.0, (2.0).sqrt() / 2.0, 0.0)
+        );
+
+        assert_zeq!(full_quarter * p, VTuple::point(-1.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn a_shearing_transformation_moves_x_in_proportion_to_y() {
+        let t = VMatrix::shearing(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+        let p = VTuple::point(2.0, 3.0, 4.0);
+
+        assert_zeq!(t * p, VTuple::point(5.0, 3.0, 4.0));
+    }
+
+    #[test]
+    fn a_shearing_transformation_moves_x_in_proportion_to_z() {
+        let t = VMatrix::shearing(0.0, 1.0, 0.0, 0.0, 0.0, 0.0);
+        let p = VTuple::point(2.0, 3.0, 4.0);
+
+        assert_zeq!(t * p, VTuple::point(6.0, 3.0, 4.0));
+    }
+
+    #[test]
+    fn a_shearing_transformation_moves_y_in_proportion_to_x() {
+        let t = VMatrix::shearing(0.0, 0.0, 1.0, 0.0, 0.0, 0.0);
+        let p = VTuple::point(2.0, 3.0, 4.0);
+
+        assert_zeq!(t * p, VTuple::point(2.0, 5.0, 4.0));
+    }
+
+    #[test]
+    fn a_shearing_transformation_moves_y_in_proportion_to_z() {
+        let t = VMatrix::shearing(0.0, 0.0, 0.0, 1.0, 0.0, 0.0);
+        let p = VTuple::point(2.0, 3.0, 4.0);
+
+        assert_zeq!(t * p, VTuple::point(2.0, 7.0, 4.0));
+    }
+
+    #[test]
+    fn a_shearing_transformation_moves_z_in_proportion_to_x() {
+        let t = VMatrix::shearing(0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+        let p = VTuple::point(2.0, 3.0, 4.0);
+
+        assert_zeq!(t * p, VTuple::point(2.0, 3.0, 6.0));
+    }
+
+    #[test]
+    fn a_shearing_transformation_moves_z_in_proportion_to_y() {
+        let t = VMatrix::shearing(0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+        let p = VTuple::point(2.0, 3.0, 4.0);
+
+        assert_zeq!(t * p, VTuple::point(2.0, 3.0, 7.0));
+    }
+
+    #[test]
+    fn individual_transformation_are_applied_in_sequence() {
+        let p = VTuple::point(1.0, 0.0, 1.0);
+        let a = VMatrix::rotation_x(PI / 2.0);
+        let b = VMatrix::scaling(5.0, 5.0, 5.0);
+        let c = VMatrix::translation(10.0, 5.0, 7.0);
+
+        let p2 = a * p;
+        assert_zeq!(p2, VTuple::point(1.0, -1.0, 0.0));
+
+        let p3 = b * p2;
+        assert_zeq!(p3, VTuple::point(5.0, -5.0, 0.0));
+
+        let p4 = c * p3;
+        assert_zeq!(p4, VTuple::point(15.0, 0.0, 7.0));
+    }
+
+    #[test]
+    fn chained_transformations_must_be_applied_in_reverse_order() {
+        let p = VTuple::point(1.0, 0.0, 1.0);
+        let a = VMatrix::rotation_x(PI / 2.0);
+        let b = VMatrix::scaling(5.0, 5.0, 5.0);
+        let c = VMatrix::translation(10.0, 5.0, 7.0);
+
+        let t = c * b * a;
+        assert_zeq!(t * p, VTuple::point(15.0, 0.0, 7.0));
+    }
+    // #[test]
+    // fn view_transform_for_the_default_orientation() {
+    //     let from = VTuple::point(0.0, 0.0, 0.0);
+    //     let to = VTuple::point(0.0, 0.0, -1.0);
+    //     let up = VTuple::vector(0.0, 1.0, 0.0);
+    //     let m = VMatrix::view_transform(from, to, up);
+    //     assert_zeq!(m, VMatrix::identity());
+    // }
+
+    // #[test]
+    // fn view_transformation_looking_into_positive_z_direction() {
+    //     let from = VTuple::point(0.0, 0.0, 0.0);
+    //     let to = VTuple::point(0.0, 0.0, 1.0);
+    //     let up = VTuple::vector(0.0, 1.0, 0.0);
+    //     let m = VMatrix::view_transform(from, to, up);
+    //     assert_zeq!(m, VMatrix::scaling(-1.0, 1.0, -1.0));
+    // }
+
+    // #[test]
+    // fn view_transformation_moves_the_world() {
+    //     let from = VTuple::point(0.0, 0.0, 8.0);
+    //     let to = VTuple::point(0.0, 0.0, 0.0);
+    //     let up = VTuple::vector(0.0, 1.0, 0.0);
+    //     let m = VMatrix::view_transform(from, to, up);
+    //     assert_zeq!(m, VMatrix::translation(0.0, 0.0, -8.0));
+    // }
+
+    // #[test]
+    // fn an_arbitrary_view_transformation() {
+    //     let from = VTuple::point(1.0, 3.0, 2.0);
+    //     let to = VTuple::point(4.0, -2.0, 8.0);
+    //     let up = VTuple::vector(1.0, 1.0, 0.0);
+    //     let m = VMatrix::view_transform(from, to, up);
+    //     assert_zeq!(
+    //         m,
+    //         VMatrix::from([
+    //             [-0.50709, 0.50709, 0.67612, -2.36643],
+    //             [0.76772, 0.60609, 0.12122, -2.82843],
+    //             [-0.35857, 0.59761, -0.71714, 0.0],
+    //             [0.0, 0.0, 0.0, 1.0],
+    //         ])
+    //     );
+    // }
 }

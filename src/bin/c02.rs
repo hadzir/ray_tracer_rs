@@ -4,12 +4,13 @@ use std::fs::write;
 use ray_tracer::canvas::vcanvas::*;
 use ray_tracer::canvas::vcolor::*;
 use ray_tracer::tuple::*;
+use ray_tracer::canvas::to_png::*;
 use ray_tracer::canvas::to_ppm::*;
 
 fn main() {
     //Time
     let mut t = 0.0;
-    let dt = 0.1;
+    let dt = 0.01;
     //Projectile and world
     let environment = Environment::new(
         VTuple::vector(0.0, -0.1, 0.0),
@@ -37,7 +38,9 @@ fn main() {
     println!("Finito => {:.2}", t);
 
     let byte_array = cnv.to_ppm();
-    write("output.ppm", byte_array).expect("Could not write output.ppm to disk")
+    write("output.ppm", byte_array).expect("Could not write output.ppm to disk");
+    let byte_array = cnv.to_png();
+    write("output.png", byte_array).expect("Could not write output.png to disk");
 }
 #[derive(Debug)]
 struct Environment {
