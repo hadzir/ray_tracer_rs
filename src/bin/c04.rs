@@ -1,10 +1,8 @@
 use core::panic;
 use std::f64::consts::PI;
 use std::fs::write;
-
-use num_traits::Float;
+use ray_tracer::F;
 use ray_tracer::canvas::to_png::*;
-use ray_tracer::canvas::to_ppm::*;
 use ray_tracer::canvas::vcanvas::*;
 use ray_tracer::canvas::vcolor::*;
 use ray_tracer::matrix::VMatrix;
@@ -14,7 +12,7 @@ fn main() {
     const WIDTH: usize = 1000;
     const HEIGHT: usize = 1000;
     const RADIUS: f64 = 450.0;
-    let mut cnv: VCanvas<f64> = VCanvas::new(WIDTH, HEIGHT);
+    let mut cnv: VCanvas = VCanvas::new(WIDTH, HEIGHT);
 
     let new_origin = VTuple::point((WIDTH / 2) as f64, (HEIGHT / 2) as f64, 0.0);
     let t_org = VMatrix::translation(new_origin.x, new_origin.y, new_origin.z);
@@ -57,14 +55,12 @@ fn main() {
 }
 
 #[derive(Debug)]
-enum Pixel<T> {
+enum Pixel {
     Coordinate { x: usize, y: usize },
-    OutOfBounds { x: T, y: T },
+    OutOfBounds { x: F, y: F },
 }
-impl<T> Pixel<T> {
-    pub fn from_point_to_canvas(point: VTuple<T>, canvas: &VCanvas) -> Pixel<T>
-    where
-        T: Float,
+impl Pixel {
+    pub fn from_point_to_canvas(point: VTuple, canvas: &VCanvas) -> Pixel
     {
         if !point.is_point() {
             panic!("Must input a point")
@@ -72,14 +68,14 @@ impl<T> Pixel<T> {
         let x = point.x;
         let y = point.y;
 
-        if x < T::zero() || y < T::zero() {
+        if x < 0.0 || y < 0.0 {
             return Pixel::OutOfBounds { x: x, y: y };
         }
-        if y.to_f64().unwrap() > canvas.height as f64 {
+        if y > canvas.height as f64 {
             return Pixel::OutOfBounds { x: x, y: y };
         }
-        let screen_x = x.round().to_usize().unwrap();
-        let screen_y = canvas.height - y.round().to_usize().unwrap();
+        let screen_x = x.round() as usize;
+        let screen_y = canvas.height - y.round() as usize;
 
         if (screen_x >= canvas.width) || (screen_y >= canvas.height) {
             return Pixel::OutOfBounds { x: x, y: y };

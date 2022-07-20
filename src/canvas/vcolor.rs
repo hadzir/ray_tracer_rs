@@ -1,36 +1,34 @@
 use std::ops;
 
-use num_traits::Float;
+use crate::F;
 
 use crate::zequality::ZEq;
 
 #[derive(Debug, Clone, Copy)]
-pub struct VColor<T>
-where
-    T: Float,
+pub struct VColor
 {
-    pub r: T,
-    pub g: T,
-    pub b: T,
+    pub r: F,
+    pub g: F,
+    pub b: F,
 }
-impl<T: Float> VColor<T> {
-    pub fn new(r: T, g: T, b: T) -> Self {
+impl VColor {
+    pub fn new(r: F, g: F, b: F) -> Self {
         Self { r, g, b }
     }
     pub fn black() -> Self {
-        Self::new(T::zero(), T::zero(), T::zero())
+        Self::new(0.0, 0.0, 0.0)
     }
     pub fn red() -> Self {
-        Self::new(T::one(), T::zero(), T::zero())
+        Self::new(1.0, 0.0, 0.0)
     }
     pub fn green() -> Self {
-        Self::new(T::zero(), T::one(), T::zero())
+        Self::new(0.0, 1.0, 0.0)
     }
     pub fn blue() -> Self {
-        Self::new(T::zero(), T::zero(), T::one())
+        Self::new(0.0, 0.0, 1.0)
     }
     pub fn to_rgb_str(&self) -> String {
-        let convert = |f: T| -> u8 { (f.round().to_u8().unwrap() * 255).clamp(0, 255) };
+        let convert = |f: F| -> u8 { (f * 255.0).clamp(0.0, 255.0) as u8};
         return format!(
             "{} {} {}",
             convert(self.r),
@@ -38,7 +36,7 @@ impl<T: Float> VColor<T> {
             convert(self.b)
         );
     }
-    pub fn clamp(&self, lower_bound: T, upper_bound: T) -> VColor<T> {
+    pub fn clamp(&self, lower_bound: F, upper_bound: F) -> VColor {
         VColor::new(
             self.r.min(upper_bound).max(lower_bound),
             self.g.min(upper_bound).max(lower_bound),
@@ -49,33 +47,27 @@ impl<T: Float> VColor<T> {
 /*
     VColor operators implementation
 */
-impl<T> ops::Add<Self> for VColor<T>
-where
-    T: Float,
+impl ops::Add<Self> for VColor
 {
     type Output = Self;
 
-    fn add(self, other: VColor<T>) -> Self::Output {
+    fn add(self, other: VColor) -> Self::Output {
         VColor::new(self.r + other.r, self.g + other.g, self.b + other.b)
     }
 }
-impl<T> ops::Sub<Self> for VColor<T>
-where
-    T: Float,
+impl ops::Sub<Self> for VColor
 {
     type Output = Self;
 
-    fn sub(self, other: VColor<T>) -> Self::Output {
+    fn sub(self, other: VColor) -> Self::Output {
         VColor::new(self.r - other.r, self.g - other.g, self.b - other.b)
     }
 }
-impl<T> ops::Mul<T> for VColor<T>
-where
-    T: Float,
+impl ops::Mul<F> for VColor
 {
     type Output = Self;
 
-    fn mul(self, multiplier: T) -> Self::Output {
+    fn mul(self, multiplier: F) -> Self::Output {
         VColor::new(
             self.r * multiplier,
             self.g * multiplier,
@@ -83,22 +75,18 @@ where
         )
     }
 }
-impl<T> ops::Mul<VColor<T>> for VColor<T>
-where
-    T: Float,
+impl ops::Mul<VColor> for VColor
 {
     type Output = Self;
 
-    fn mul(self, other: VColor<T>) -> Self::Output {
+    fn mul(self, other: VColor) -> Self::Output {
         VColor::new(self.r * other.r, self.g * other.g, self.b * other.b)
     }
 }
 // Perhaps implement own assert_zeq! with custom zequal trait and macro?
-impl<T> PartialEq for VColor<T>
-where
-    T: Float,
+impl PartialEq for VColor
 {
-    fn eq(&self, other: &VColor<T>) -> bool {
+    fn eq(&self, other: &VColor) -> bool {
         self.r.zeq(other.r) && self.g.zeq(other.g) && self.b.zeq(other.b)
     }
 }

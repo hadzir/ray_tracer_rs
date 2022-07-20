@@ -44,21 +44,21 @@ fn main() {
 }
 #[derive(Debug)]
 struct Environment {
-    gravity: VTuple<f64>,
-    wind: VTuple<f64>,
+    gravity: VTuple,
+    wind: VTuple,
 }
 impl Environment {
-    pub fn new(gravity: VTuple<f64>, wind: VTuple<f64>) -> Self {
+    pub fn new(gravity: VTuple, wind: VTuple) -> Self {
         Environment { gravity, wind }
     }
 }
 #[derive(Debug)]
 struct Projectile {
-    position: VTuple<f64>,
-    velocity: VTuple<f64>,
+    position: VTuple,
+    velocity: VTuple,
 }
 impl Projectile {
-    pub fn new(position: VTuple<f64>, velocity: VTuple<f64>) -> Self {
+    pub fn new(position: VTuple, velocity: VTuple) -> Self {
         Projectile { position, velocity }
     }
 }
@@ -74,7 +74,7 @@ enum Pixel {
     OutOfBounds,
 }
 impl Pixel {
-    pub fn from_point_to_canvas(point: VTuple<f64>, canvas: &VCanvas) -> Pixel {
+    pub fn from_point_to_canvas(point: VTuple, canvas: &VCanvas) -> Pixel {
         if !point.is_point() {
             panic!("Must input a point")
         }

@@ -1,4 +1,4 @@
-use num_traits::Float;
+use crate::F;
 
 pub trait ZEq<T>
 {
@@ -9,12 +9,10 @@ pub trait ZEq<T>
     }
 }
 
-impl<T> ZEq<T> for T 
-where
-    T: Float,
+impl ZEq<F> for F 
 {
-    fn zeq(&self, other: T) -> bool {
-        return (*self - other).abs() < T::from(0.00001).unwrap();
+    fn zeq(&self, other: F) -> bool {
+        return (*self - other).abs() < F::from(0.00001);
     }
 }
 

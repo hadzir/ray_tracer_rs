@@ -1,12 +1,10 @@
-use num_traits::Float;
-
 use crate::canvas::vcolor::*;
 use std::vec::Vec;
 pub trait Sized {
     fn width(&self) -> usize;
     fn height(&self) -> usize;
 }
-impl<T: Float> Sized for VCanvas<T> {
+impl Sized for VCanvas {
     fn width(&self) -> usize {
         self.width
     }
@@ -14,19 +12,13 @@ impl<T: Float> Sized for VCanvas<T> {
         self.height
     }
 }
-pub struct VCanvas<T = f64>
-where
-    T: Float,
-{
+pub struct VCanvas {
     pub width: usize,
     pub height: usize,
 
-    pixels: Vec<VColor<T>>,
+    pixels: Vec<VColor>,
 }
-impl<T> VCanvas<T>
-where
-    T: Float,
-{
+impl VCanvas {
     pub fn new(width: usize, height: usize) -> Self {
         Self {
             width,
@@ -37,14 +29,14 @@ where
     fn get_pixel_index(&self, x: usize, y: usize) -> usize {
         y * self.width + x
     }
-    pub fn write_pixel(&mut self, x: usize, y: usize, color: VColor<T>) {
+    pub fn write_pixel(&mut self, x: usize, y: usize, color: VColor) {
         let index = self.get_pixel_index(x, y);
         self.pixels[index] = color;
     }
-    pub fn pixel_at(&self, x: usize, y: usize) -> VColor<T> {
+    pub fn pixel_at(&self, x: usize, y: usize) -> VColor {
         self.pixels[self.get_pixel_index(x, y)]
     }
-    pub fn get_pixels(&self) -> &Vec<VColor<T>> {
+    pub fn get_pixels(&self) -> &Vec<VColor> {
         &self.pixels
     }
 }
@@ -56,7 +48,7 @@ mod tests {
 
     #[test]
     fn creating_a_canvas() {
-        let cnv : VCanvas<f64> = VCanvas::new(10, 20);
+        let cnv: VCanvas = VCanvas::new(10, 20);
 
         assert_eq!(cnv.width, 10);
         assert_eq!(cnv.height, 20);
@@ -69,7 +61,7 @@ mod tests {
     }
     #[test]
     fn writing_pixels_to_a_canvas() {
-        let mut cnv: VCanvas<f64> = VCanvas::new(10, 20);
+        let mut cnv: VCanvas = VCanvas::new(10, 20);
 
         let c = VColor::red();
         cnv.write_pixel(2, 3, c);
@@ -78,7 +70,7 @@ mod tests {
     }
     #[test]
     fn constructing_the_ppm_header() {
-        let cnv: VCanvas<f64>  = VCanvas::new(5, 3);
+        let cnv: VCanvas = VCanvas::new(5, 3);
 
         let result = cnv.create_ppm_header();
         let expected_result = String::from("P3\n5 3\n255\n").into_bytes();

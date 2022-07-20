@@ -1,76 +1,40 @@
 use crate::tuple::VTuple;
 use crate::zequality::ZEq;
-use num_traits::Float;
+use crate::F;
 use std::convert::From;
-use std::ops::{self, AddAssign};
+use std::ops;
 
 /*
 _______________________________________ DxD generics _____________________________________________
 */
-#[derive(Debug, Clone, Copy)]
-pub struct VMatrix<T, const D: usize>
-where
-    T: Float,
-{
-    data: [[T; D]; D],
+#[derive(Debug, Clone, Copy,PartialEq)]
+pub struct VMatrix<const D: usize> {
+    data: [[F; D]; D],
 }
-impl<T, const D: usize> From<[[T; D]; D]> for VMatrix<T, D>
-where
-    T: Float,
-{
-    fn from(data: [[T; D]; D]) -> Self {
+impl<const D: usize> From<[[F; D]; D]> for VMatrix<D> {
+    fn from(data: [[F; D]; D]) -> Self {
         VMatrix { data }
     }
 }
-impl<T, const D: usize> VMatrix<T, D>
-where
-    T: Float,
-{
-    pub fn default() -> VMatrix<T, D> {
-        VMatrix::from([[T::zero(); D]; D])
+impl<const D: usize> VMatrix<D> {
+    pub fn default() -> VMatrix<D> {
+        VMatrix::from([[0.0; D]; D])
     }
 }
-impl<T, const D: usize> ops::Index<usize> for VMatrix<T, D>
-where
-    T: Float,
-{
-    type Output = [T; D];
+impl<const D: usize> ops::Index<usize> for VMatrix<D> {
+    type Output = [F; D];
     fn index(&self, index: usize) -> &Self::Output {
         &self.data[index]
     }
 }
-impl<T, const D: usize> ops::IndexMut<usize> for VMatrix<T, D>
-where
-    T: Float,
-{
+impl<const D: usize> ops::IndexMut<usize> for VMatrix<D> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.data[index]
     }
 }
-impl<T, const D: usize> ops::Mul<VMatrix<T, D>> for VMatrix<T, D>
-where
-    T: Float,
-    T: AddAssign,
+impl<const D: usize> ZEq<Self> for VMatrix<D>
 {
-    type Output = VMatrix<T, D>;
-    fn mul(self, other: VMatrix<T, D>) -> Self::Output {
-        let mut tgt: VMatrix<T, D> = VMatrix::default();
-        for row in 0..D {
-            for col in 0..D {
-                for i in 0..D {
-                    tgt[row][col] += self[row][i] * other[i][col]
-                }
-            }
-        }
-        tgt
-    }
-}
-impl<T, const D: usize> ZEq<Self> for VMatrix<T, D>
-where
-    T: Float,
-    T: ZEq<T>,
-{
-    fn zeq(&self, other: VMatrix<T, D>) -> bool {
+    fn zeq(&self, other: Self) -> bool {
         for i in 0..D {
             for j in 0..D {
                 if !self[i][j].zeq(other[i][j]) {
@@ -81,72 +45,83 @@ where
         return true;
     }
 }
+impl<const D: usize> ops::Mul<VMatrix<D>> for VMatrix<D> {
+    type Output = VMatrix<D>;
+    fn mul(self, other: VMatrix<D>) -> Self::Output {
+        let mut tgt: VMatrix<D> = VMatrix::default();
+        for row in 0..D {
+            for col in 0..D {
+                for i in 0..D {
+                    tgt[row][col] += self[row][i] * other[i][col]
+                }
+            }
+        }
+        tgt
+    }
+}
+
 /*
 _______________________________________ 4x4 specifics _____________________________________________
 */
-impl<T> VMatrix<T, 4>
-where
-    T: Float,
-    T: AddAssign,
-{
+impl VMatrix<4> {
     #[rustfmt::skip]
-    pub fn shearing(xy:T,xz:T,yx:T,yz:T,zx:T,zy:T) -> VMatrix<T, 4> {
+    pub fn shearing(xy:F,xz:F,yx:F,yz:F,zx:F,zy:F) -> VMatrix<4> {
         VMatrix::from([
-            [T::one(),  xy,         xz,         T::zero()],
-            [yx,        T::one(),   yz,         T::zero()],
-            [zx,        zy,         T::one(),   T::zero()],
-            [T::zero(), T::zero(),  T::zero(),  T::one()],
+            [1.0,  xy,         xz,         0.0],
+            [yx,        1.0,   yz,         0.0],
+            [zx,        zy,         1.0,   0.0],
+            [0.0, 0.0,  0.0,  1.0],
         ])
     }
     #[rustfmt::skip]
-    pub fn rotation_x(ang: T) -> VMatrix<T, 4> {
+    pub fn rotation_x(ang: F) -> VMatrix<4> {
         VMatrix::from([
-            [T::one(),  T::zero(),  T::zero(),  T::zero()],
-            [T::zero(), ang.cos(), -ang.sin(),  T::zero()],
-            [T::zero(), ang.sin(),  ang.cos(),  T::zero()],
-            [T::zero(), T::zero(),  T::zero(),  T::one()],
+            [1.0,  0.0,  0.0,  0.0],
+            [0.0, ang.cos(), -ang.sin(),  0.0],
+            [0.0, ang.sin(),  ang.cos(),  0.0],
+            [0.0, 0.0,  0.0,  1.0],
         ])
     }
     #[rustfmt::skip]
-    pub fn rotation_y(ang: T) -> VMatrix<T, 4> {
+    pub fn rotation_y(ang: F) -> VMatrix<4> {
         VMatrix::from([
-            [ang.cos(), T::zero(),  ang.sin(),  T::zero()],
-            [T::zero(), T::one(),   T::zero(),  T::zero()],
-            [-ang.sin(),T::zero(),  ang.cos(),  T::zero()],
-            [T::zero(), T::zero(),  T::zero(),  T::one()],
+            [ang.cos(), 0.0,  ang.sin(),  0.0],
+            [0.0, 1.0,   0.0,  0.0],
+            [-ang.sin(),0.0,  ang.cos(),  0.0],
+            [0.0, 0.0,  0.0,  1.0],
         ])
     }
     #[rustfmt::skip]
-    pub fn rotation_z(ang: T) -> VMatrix<T, 4> {
+    pub fn rotation_z(ang: F) -> VMatrix<4> {
         VMatrix::from([
-            [ang.cos(),-ang.sin(),  T::zero(),  T::zero()],
-            [ang.sin(), ang.cos(),  T::zero(),  T::zero()],
-            [T::zero(), T::zero(),  T::one(),   T::zero()],
-            [T::zero(), T::zero(),  T::zero(),  T::one()],
+            [ang.cos(),-ang.sin(),  0.0,  0.0],
+            [ang.sin(), ang.cos(),  0.0,  0.0],
+            [0.0, 0.0,  1.0,   0.0],
+            [0.0, 0.0,  0.0,  1.0],
         ])
     }
     #[rustfmt::skip]
-    pub fn translation(x: T, y: T, z: T) -> VMatrix<T, 4> {
+    pub fn translation(x: F, y: F, z: F) -> VMatrix<4> {
         VMatrix::from([
-            [T::one(),  T::zero(),  T::zero(),  x],
-            [T::zero(), T::one(),   T::zero(),  y],
-            [T::zero(), T::zero(),  T::one(),   z],
-            [T::zero(), T::zero(),  T::zero(),  T::one()],
+            [1.0,  0.0,  0.0,  x],
+            [0.0, 1.0,   0.0,  y],
+            [0.0, 0.0,  1.0,   z],
+            [0.0, 0.0,  0.0,  1.0],
         ])
     }
     #[rustfmt::skip]
-    pub fn scaling(x: T, y: T, z: T) -> VMatrix<T, 4> {
+    pub fn scaling(x: F, y: F, z: F) -> VMatrix<4> {
         VMatrix::from([
-            [x,         T::zero(),  T::zero(),  T::zero()],
-            [T::zero(), y,          T::zero(),  T::zero()],
-            [T::zero(), T::zero(),  z,          T::zero()],
-            [T::zero(), T::zero(),  T::zero(),  T::one()],
+            [x,         0.0,  0.0,  0.0],
+            [0.0, y,          0.0,  0.0],
+            [0.0, 0.0,  z,          0.0],
+            [0.0, 0.0,  0.0,  1.0],
         ])
     }
-    pub fn identity() -> VMatrix<T, 4> {
-        let mut result: VMatrix<T, 4> = VMatrix::default();
+    pub fn identity() -> VMatrix<4> {
+        let mut result: VMatrix<4> = VMatrix::default();
         for i in 0..4 {
-            result[i][i] = T::one();
+            result[i][i] = 1.0;
         }
         result
     }
@@ -158,8 +133,8 @@ where
             }
         }
     }
-    pub fn transposed(self) -> VMatrix<T, 4> {
-        let mut result: VMatrix<T, 4> = VMatrix::default();
+    pub fn transposed(self) -> VMatrix<4> {
+        let mut result: VMatrix<4> = VMatrix::default();
         for i in 0..4 {
             for j in 0..4 {
                 result[i][j] = self[j][i];
@@ -168,7 +143,7 @@ where
         result
     }
     pub fn is_invertable(self) -> bool {
-        self.determinant().zneg(T::zero())
+        self.determinant().zneg(0.0)
     }
     pub fn invert(&mut self) {
         if !self.is_invertable() {
@@ -180,30 +155,30 @@ where
 
         for row in 0..4 {
             for col in 0..4 {
-                let cofactor: T = copy.cofactor(row, col);
+                let cofactor: F = copy.cofactor(row, col);
                 self[col][row] = cofactor / determinant; //stores transposed
             }
         }
     }
-    pub fn inverted(self) -> VMatrix<T, 4> {
+    pub fn inverted(self) -> VMatrix<4> {
         if !self.is_invertable() {
             panic!("Matrix is not invertible, but inversion was called")
         }
 
-        let mut tgt: VMatrix<T, 4> = VMatrix::default();
-        let determinant: T = self.determinant();
+        let mut tgt: VMatrix<4> = VMatrix::default();
+        let determinant: F = self.determinant();
 
         for row in 0..4 {
             for col in 0..4 {
-                let cofactor: T = self.cofactor(row, col);
-                tgt[col][row] = T::from(cofactor / determinant).unwrap(); //stores transposed
+                let cofactor: F = self.cofactor(row, col);
+                tgt[col][row] = cofactor / determinant; //stores transposed
             }
         }
         tgt
     }
-    pub fn submatrix(self, rmv_row: usize, rmv_col: usize) -> VMatrix<T, 3> {
+    pub fn submatrix(self, rmv_row: usize, rmv_col: usize) -> VMatrix<3> {
         // @FIXME: Find a nicer algorithm for this garbage
-        let mut tgt: VMatrix<T, 3> = VMatrix::default();
+        let mut tgt: VMatrix<3> = VMatrix::default();
 
         let mut src_row: usize = 0;
         let mut src_col: usize = 0;
@@ -232,17 +207,17 @@ where
         }
         tgt
     }
-    pub fn minor(self, rmv_row: usize, rmv_col: usize) -> T {
-        T::from(self.submatrix(rmv_row, rmv_col).determinant()).unwrap()
+    pub fn minor(self, rmv_row: usize, rmv_col: usize) -> F {
+        self.submatrix(rmv_row, rmv_col).determinant()
     }
-    pub fn cofactor(self, rmv_row: usize, rmv_col: usize) -> T {
+    pub fn cofactor(self, rmv_row: usize, rmv_col: usize) -> F {
         let minor = self.minor(rmv_row, rmv_col);
-        let rmd: T = T::from(((rmv_col + rmv_row) % 2) as f64).unwrap();
-        let sign: T = T::from(1.0 - 2.0 * rmd.to_f64().unwrap()).unwrap();
+        let rmd: F = ((rmv_col + rmv_row) % 2) as F;
+        let sign: F = 1.0 - 2.0 * rmd;
         return minor * sign;
     }
-    pub fn determinant(self) -> T {
-        let mut determinant: T = T::zero();
+    pub fn determinant(self) -> F {
+        let mut determinant: F = 0.0;
 
         for col in 0..4 {
             determinant = determinant + self[0][col] * self.cofactor(0, col);
@@ -251,12 +226,9 @@ where
     }
 }
 
-impl<T> ops::Mul<VTuple<T>> for VMatrix<T, 4>
-where
-    T: Float,
-{
-    type Output = VTuple<T>;
-    fn mul(self, other: VTuple<T>) -> Self::Output {
+impl ops::Mul<VTuple> for VMatrix<4> {
+    type Output = VTuple;
+    fn mul(self, other: VTuple) -> Self::Output {
         VTuple::new(
             self[0][0] * other.x
                 + self[0][1] * other.y
@@ -280,14 +252,10 @@ where
 /*
 _______________________________________ 3x3 specifics _____________________________________________
 */
-impl<T> VMatrix<T, 3>
-where
-    T: Float,
-    T: AddAssign,
-{
-    pub fn submatrix(self, rmv_row: usize, rmv_col: usize) -> VMatrix<T, 2> {
+impl VMatrix<3> {
+    pub fn submatrix(self, rmv_row: usize, rmv_col: usize) -> VMatrix<2> {
         // @FIXME: Find a nicer algorithm for this garbage
-        let mut tgt: VMatrix<T, 2> = VMatrix::default();
+        let mut tgt: VMatrix<2> = VMatrix::default();
 
         let mut src_row: usize = 0;
         let mut src_col: usize = 0;
@@ -316,17 +284,17 @@ where
         }
         tgt
     }
-    pub fn minor(self, rmv_row: usize, rmv_col: usize) -> T {
+    pub fn minor(self, rmv_row: usize, rmv_col: usize) -> F {
         self.submatrix(rmv_row, rmv_col).determinant()
     }
-    pub fn cofactor(self, rmv_row: usize, rmv_col: usize) -> T {
+    pub fn cofactor(self, rmv_row: usize, rmv_col: usize) -> F {
         let minor = self.minor(rmv_row, rmv_col);
-        let rmd = (rmv_col + rmv_row) % 2;
-        let sign = T::from(1.0 - 2.0 * rmd as f64).unwrap();
+        let rmd = ((rmv_col + rmv_row) % 2) as F;
+        let sign = 1.0 - 2.0 * rmd;
         return minor * sign;
     }
-    pub fn determinant(self) -> T {
-        let mut determinant: T = T::zero();
+    pub fn determinant(self) -> F {
+        let mut determinant: F = 0.0;
 
         for col in 0..3 {
             determinant += self[0][col] * self.cofactor(0, col);
@@ -337,11 +305,8 @@ where
 /*
 _______________________________________ 2x2 specifics _____________________________________________
 */
-impl<T> VMatrix<T, 2>
-where
-    T: Float,
-{
-    pub fn determinant(self) -> T {
+impl VMatrix<2> {
+    pub fn determinant(self) -> F {
         self.data[0][0] * self.data[1][1] - self.data[0][1] * self.data[1][0]
     }
 }
@@ -349,9 +314,9 @@ where
 #[cfg(test)]
 mod test {
     use std::f64::consts::PI;
-    type Matrix4f = VMatrix<f64, 4>;
-    type Matrix3f = VMatrix<f64, 3>;
-    type Matrix2f = VMatrix<f64, 2>;
+    type Matrix4f = VMatrix<4>;
+    type Matrix3f = VMatrix<3>;
+    type Matrix2f = VMatrix<2>;
 
     use crate::tuple::VTuple;
 
@@ -789,7 +754,7 @@ mod test {
 
         assert_zeq!(
             half_quarter * p,
-            VTuple::point(0.0, (2.0).sqrt() / 2.0, (2.0).sqrt() / 2.0)
+            VTuple::point(0.0, (2.0_f64).sqrt() / 2.0, (2.0_f64).sqrt() / 2.0)
         );
 
         assert_zeq!(full_quarter * p, VTuple::point(0.0, 0.0, 1.0));
@@ -806,7 +771,7 @@ mod test {
 
         assert_zeq!(
             inverse_half_quarter * p,
-            VTuple::point(0.0, (2.0).sqrt() / 2.0, -(2.0).sqrt() / 2.0)
+            VTuple::point(0.0, (2.0_f64).sqrt() / 2.0, -(2.0_f64).sqrt() / 2.0)
         );
 
         assert_zeq!(inverse_full_quarter * p, VTuple::point(0.0, 0.0, -1.0));
@@ -820,7 +785,7 @@ mod test {
 
         assert_zeq!(
             half_quarter * p,
-            VTuple::point((2.0).sqrt() / 2.0, 0.0, (2.0).sqrt() / 2.0)
+            VTuple::point((2.0_f64).sqrt() / 2.0, 0.0, (2.0_f64).sqrt() / 2.0)
         );
 
         assert_zeq!(full_quarter * p, VTuple::point(1.0, 0.0, 0.0));
@@ -834,7 +799,7 @@ mod test {
 
         assert_zeq!(
             half_quarter * p,
-            VTuple::point(-(2.0).sqrt() / 2.0, (2.0).sqrt() / 2.0, 0.0)
+            VTuple::point(-(2.0_f64).sqrt() / 2.0, (2.0_f64).sqrt() / 2.0, 0.0)
         );
 
         assert_zeq!(full_quarter * p, VTuple::point(-1.0, 0.0, 0.0));

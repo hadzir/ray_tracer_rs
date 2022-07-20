@@ -1,27 +1,21 @@
 use std::ops;
 
-use num_traits::Float;
+use crate::F;
 
 use crate::zequality::ZEq;
 
 #[derive(Debug, Copy, Clone)]
-pub struct VTuple<T>
-where
-    T: Float,
-{
-    pub x: T,
-    pub y: T,
-    pub z: T,
-    pub w: T,
+pub struct VTuple {
+    pub x: F,
+    pub y: F,
+    pub z: F,
+    pub w: F,
 }
 /*
     VTuple type implementation
 */
-impl<T> VTuple<T>
-where
-    T: Float,
-{
-    pub fn new(x: T, y: T, z: T, w: T) -> Self {
+impl VTuple {
+    pub fn new(x: F, y: F, z: F, w: F) -> Self {
         Self {
             x: x,
             y: y,
@@ -31,36 +25,36 @@ where
     }
     pub fn default() -> Self {
         Self {
-            x: T::zero(),
-            y: T::zero(),
-            z: T::zero(),
-            w: T::zero(),
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            w: 0.0,
         }
     }
-    pub fn point(x: T, y: T, z: T) -> Self {
+    pub fn point(x: F, y: F, z: F) -> Self {
         Self {
             x: x,
             y: y,
             z: z,
-            w: T::one(),
+            w: 1.0,
         }
     }
-    pub fn vector(x: T, y: T, z: T) -> Self {
+    pub fn vector(x: F, y: F, z: F) -> Self {
         Self {
             x: x,
             y: y,
             z: z,
-            w: T::zero(),
+            w: 0.0,
         }
     }
     pub fn is_point(&self) -> bool {
-        return self.w != T::zero();
+        return self.w != 0.0;
     }
     pub fn is_vector(&self) -> bool {
-        return self.w == T::zero();
+        return self.w == 0.0;
     }
 
-    pub fn magnitude(&self) -> T {
+    pub fn magnitude(&self) -> F {
         return (self.x.powi(2) + self.y.powi(2) + self.z.powi(2) + self.w.powi(2)).sqrt();
     }
 
@@ -68,7 +62,7 @@ where
         return *self / self.magnitude();
     }
 
-    pub fn dot(&self, &other: &Self) -> T {
+    pub fn dot(&self, &other: &Self) -> F {
         return self.x * other.x + self.y * other.y + self.z * other.z + self.w * other.w;
     }
 
@@ -85,10 +79,7 @@ where
     }
 }
 
-impl<T> ops::Add<Self> for VTuple<T>
-where
-    T: Float,
-{
+impl ops::Add<Self> for VTuple {
     type Output = Self;
 
     fn add(self, other: Self) -> Self::Output {
@@ -100,10 +91,7 @@ where
         )
     }
 }
-impl<T> ops::Sub<Self> for VTuple<T>
-where
-    T: Float,
-{
+impl ops::Sub<Self> for VTuple {
     type Output = Self;
 
     fn sub(self, other: Self) -> Self::Output {
@@ -116,23 +104,17 @@ where
     }
 }
 
-impl<T> ops::Neg for VTuple<T>
-where
-    T: Float,
-{
+impl ops::Neg for VTuple {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
         VTuple::new(-self.x, -self.y, -self.z, -self.w)
     }
 }
-impl<T> ops::Mul<T> for VTuple<T>
-where
-    T: Float,
-{
+impl ops::Mul<F> for VTuple {
     type Output = Self;
 
-    fn mul(self, multiplier: T) -> Self::Output {
+    fn mul(self, multiplier: F) -> Self::Output {
         VTuple::new(
             self.x * multiplier,
             self.y * multiplier,
@@ -141,26 +123,22 @@ where
         )
     }
 }
-impl<T> ops::Div<T> for VTuple<T>
-where
-    T: Float,
-{
+impl ops::Div<F> for VTuple {
     type Output = Self;
 
-    fn div(self, multiplier: T) -> Self::Output {
+    fn div(self, divisor: F) -> Self::Output {
         VTuple::new(
-            self.x / multiplier,
-            self.y / multiplier,
-            self.z / multiplier,
-            self.w / multiplier,
+            self.x / divisor,
+            self.y / divisor,
+            self.z / divisor,
+            self.w / divisor,
         )
     }
 }
 // Perhaps implement own assert_zeq! with custom zequal trait and macro?
-impl<T> ZEq<Self> for VTuple<T>
+impl ZEq<Self> for VTuple
 where
-    T: Float,
-    T: ZEq<T>,
+    F: ZEq<F>,
 {
     fn zeq(&self, other: Self) -> bool {
         self.x.zeq(other.x) && self.y.zeq(other.y) && self.z.zeq(other.z) && self.w.zeq(other.w)
