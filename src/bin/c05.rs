@@ -1,4 +1,7 @@
 use indicatif::ProgressBar;
+use itertools::Itertools;
+use std::sync::Mutex;
+
 use ray_tracer::body::VIntersectable;
 use ray_tracer::canvas::to_png::ToPNG;
 use ray_tracer::canvas::vcanvas::*;
@@ -7,16 +10,27 @@ use ray_tracer::ray::*;
 use ray_tracer::sphere::*;
 use ray_tracer::tuple::*;
 use ray_tracer::F;
+use rayon::prelude::*;
 use std::fs::write;
 
+macro_rules! time_it {
+    ($context:literal, $s:stmt) => {
+        let timer = std::time::Instant::now();
+        $s
+        println!("{}: {:?}", $context, timer.elapsed());
+    };
+}
 fn main() {
+    time_it!("Raytracing", ray_trace(512));
+}
+
+fn ray_trace(canvas_size: usize) {
     let ray_origin = VTuple::point(0.0, 0.0, -5.0);
     let wall_position_z = 5.0;
     let wall_size = 10.0;
 
-    let canvas_size = 1024;
     let canvas_pixel_world_size = wall_size / canvas_size as F;
-    let mut canvas = VCanvas::new(canvas_size, canvas_size);
+    let canvas_mutex = Mutex::new(VCanvas::new(canvas_size, canvas_size));
     let yellow = VColor::yellow();
     let sphere = VSphere::new(None);
 
@@ -26,8 +40,11 @@ fn main() {
     );
     let progress = ProgressBar::new(canvas_size.pow(2) as u64);
     progress.set_draw_rate(2);
-    for x in 0..canvas_size {
-        for y in 0..canvas_size {
+
+    (0..canvas_size)
+        .cartesian_product(0..canvas_size)
+        .par_bridge()
+        .for_each(|(x, y)| {
             let half = wall_size / 2.0;
             let world_x = -half + canvas_pixel_world_size * x as f64;
             let world_y = half - canvas_pixel_world_size * y as f64;
@@ -36,12 +53,14 @@ fn main() {
             let xs = sphere.intersect(ray);
 
             if xs.hit() != None {
+                let mut canvas = canvas_mutex.lock().unwrap();
                 canvas.write_pixel(x, y, yellow);
             }
             progress.inc(1);
-        }
-    }
+        });
     progress.finish();
+    println!("Writing ./output.png");
+    let canvas = canvas_mutex.lock().unwrap();
     let byte_array = canvas.to_png();
     write("output.png", byte_array).expect("Could not write output.png to disk");
 }
