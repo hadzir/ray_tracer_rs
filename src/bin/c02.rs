@@ -1,9 +1,10 @@
 use core::panic;
 use std::fs::write;
 
-use ray_tracer::canvas::*;
-use ray_tracer::color::*;
+use ray_tracer::canvas::vcanvas::*;
+use ray_tracer::canvas::vcolor::*;
 use ray_tracer::tuple::*;
+use ray_tracer::canvas::to_ppm::*;
 
 fn main() {
     //Time
@@ -22,13 +23,14 @@ fn main() {
     let mut cnv = VCanvas::new(1000, 1000);
     while projectile.position.y > 0.0 {
         t += dt;
-        
+
         let pixel = Pixel::from_point_to_canvas(projectile.position, &cnv);
-        match pixel{
-            Pixel::Coordinate{x,y}=>{cnv.write_pixel(x, y, VColor::red());}
-            _=>{}
+        match pixel {
+            Pixel::Coordinate { x, y } => {
+                cnv.write_pixel(x, y, VColor::red());
+            }
+            _ => {}
         }
-        
 
         projectile = tick(projectile, &environment, dt);
     }
@@ -77,8 +79,7 @@ impl Pixel {
         let screen_x = point.x.round() as usize;
         let screen_y = canvas.height - point.y.round() as usize;
 
-        if (screen_x >= canvas.width) || (screen_y >= canvas.height)
-        {
+        if (screen_x >= canvas.width) || (screen_y >= canvas.height) {
             return Pixel::OutOfBounds;
         } else {
             return Pixel::Coordinate {
