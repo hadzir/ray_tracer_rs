@@ -1,6 +1,6 @@
 use crate::{matrix::VMatrix, tuple::*, F};
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 
 pub struct VRay {
     pub origin: VTuple,

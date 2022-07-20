@@ -4,7 +4,7 @@ use crate::F;
 
 use crate::zequality::ZEq;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct VTuple {
     pub x: F,
     pub y: F,

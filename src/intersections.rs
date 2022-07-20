@@ -3,7 +3,7 @@ use std::ops;
 use crate::body::VBody;
 use crate::{ray::VRay, F};
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct VIntersection {
     pub t: F,
     pub ray: VRay,
@@ -14,9 +14,7 @@ impl VIntersection {
     pub fn new(t: F, ray: VRay, body: VBody) -> VIntersection {
         VIntersection { t, ray, body }
     }
-
 }
-
 
 pub struct VIntersections {
     data: Vec<VIntersection>,
@@ -32,6 +30,15 @@ impl VIntersections {
     }
     pub fn len(&self) -> usize {
         self.data.len()
+    }
+    pub fn hit(&self) -> Option<&VIntersection> {
+        for intersection in self.data.iter() {
+            if intersection.t > 0.0 {
+                return Some(intersection);
+            }
+        }
+
+        None
     }
 }
 impl From<Vec<VIntersection>> for VIntersections {

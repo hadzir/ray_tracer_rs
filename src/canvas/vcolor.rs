@@ -27,6 +27,12 @@ impl VColor {
     pub fn blue() -> Self {
         Self::new(0.0, 0.0, 1.0)
     }
+    pub fn yellow() -> Self {
+        Self::new(1.0, 1.0, 0.0)
+    }
+    pub fn cyan() -> Self {
+        Self::new(0.0, 1.0, 1.0)
+    }
     pub fn to_rgb_str(&self) -> String {
         let convert = |f: F| -> u8 { (f * 255.0).clamp(0.0, 255.0) as u8};
         return format!(
