@@ -4,7 +4,7 @@ use crate::F;
 
 use crate::zequality::ZEq;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy,PartialEq)]
 pub struct VColor
 {
     pub r: F,
@@ -17,6 +17,9 @@ impl VColor {
     }
     pub fn black() -> Self {
         Self::new(0.0, 0.0, 0.0)
+    }
+    pub fn white() -> Self {
+        Self::new(1.0, 1.0, 1.0)
     }
     pub fn red() -> Self {
         Self::new(1.0, 0.0, 0.0)
@@ -90,9 +93,9 @@ impl ops::Mul<VColor> for VColor
     }
 }
 // Perhaps implement own assert_zeq! with custom zequal trait and macro?
-impl PartialEq for VColor
+impl ZEq<Self> for VColor
 {
-    fn eq(&self, other: &VColor) -> bool {
+    fn zeq(&self, other: VColor) -> bool {
         self.r.zeq(other.r) && self.g.zeq(other.g) && self.b.zeq(other.b)
     }
 }
@@ -116,7 +119,7 @@ mod tests {
         let result = c1 + c2;
         let expected_result = VColor::new(1.6, 0.7, 1.0);
 
-        assert_eq!(result, expected_result);
+        assert_zeq!(result, expected_result);
     }
     #[test]
     fn subtracting_colors() {
@@ -126,7 +129,7 @@ mod tests {
         let result = c1 - c2;
         let expected_result = VColor::new(0.2, 0.5, 0.5);
 
-        assert_eq!(result, expected_result);
+        assert_zeq!(result, expected_result);
     }
     #[test]
     fn multiplying_color_by_a_scalar() {
@@ -136,7 +139,7 @@ mod tests {
         let result = c * scalar;
         let expected_result = VColor::new(0.4, 0.6, 0.8);
 
-        assert_eq!(result, expected_result);
+        assert_zeq!(result, expected_result);
     }
     #[test]
     fn multiplying_colors() {
@@ -146,6 +149,6 @@ mod tests {
         let result = c1 * c2;
         let expected_result = VColor::new(0.9, 0.2, 0.04);
 
-        assert_eq!(result, expected_result);
+        assert_zeq!(result, expected_result);
     }
 }

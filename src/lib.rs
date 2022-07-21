@@ -7,4 +7,6 @@ pub mod ray;
 pub mod sphere;
 pub mod intersections;
 pub mod body;
+pub mod light;
+pub mod material;
 pub type F=f64;

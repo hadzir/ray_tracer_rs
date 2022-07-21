@@ -77,6 +77,15 @@ impl VTuple {
             self.x * other.y - self.y * other.x,
         );
     }
+    pub fn reflect(&mut self, normal: VTuple) {
+        let reflection = *self - normal * 2.0 * self.dot(&normal);
+        self.x = reflection.x;
+        self.y = reflection.y;
+        self.z = reflection.z;
+    }
+    pub fn reflected(&self, normal: VTuple) -> VTuple {
+        *self - normal * 2.0 * self.dot(&normal)
+    }
 }
 
 impl ops::Add<Self> for VTuple {
@@ -379,5 +388,15 @@ mod tests {
 
         assert!(result.is_vector());
         assert_zeq!(result, expected_result);
+    }
+    #[test]
+    fn reflecting_a_vector_at_45_degrees() {
+        let v = VTuple::vector(1.0, -1.0, 0.0);
+        let n = VTuple::vector(0.0, 1.0, 0.0);
+        let r = v.reflected(n);
+
+        let expected_result = VTuple::vector(1.0, 1.0, 0.0);
+
+        assert_zeq!(r, expected_result)
     }
 }

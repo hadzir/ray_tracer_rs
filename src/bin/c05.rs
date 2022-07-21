@@ -32,7 +32,7 @@ fn ray_trace(canvas_size: usize) {
     let canvas_pixel_world_size = wall_size / canvas_size as F;
     let canvas_mutex = Mutex::new(VCanvas::new(canvas_size, canvas_size));
     let yellow = VColor::yellow();
-    let sphere = VSphere::new(None);
+    let sphere = VSphere::default();
 
     println!(
         "Raytracing {} pixels. Please be patient...",

@@ -1,31 +1,42 @@
 use crate::body::VBody;
 use crate::body::VIntersectable;
+use crate::material::*;
 use crate::matrix::*;
 use crate::ray::VRay;
 use crate::tuple::VTuple;
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct VSphere {
     pub transform: VMatrix<4>,
-    //pub material: VMaterial,
+    pub material: VMaterial,
 }
 
 impl Default for VSphere {
     fn default() -> Self {
         Self {
             transform: VMatrix::identity(),
-            //material: VMaterial::default(),
+            material: Default::default(),
         }
     }
 }
 impl VSphere {
-    pub fn new(transform: Option<VMatrix<4>>) -> Self {
+    pub fn new(transform: Option<VMatrix<4>>, material: VMaterial) -> Self {
         match transform {
-            Some(transform) => VSphere { transform },
+            Some(transform) => VSphere {
+                transform,
+                material,
+            },
             None => VSphere::default(),
         }
     }
-    fn set_transform(&mut self, transform: VMatrix<4>) {
+
+    pub fn with_transform(mut self, transform: VMatrix<4>) -> Self {
         self.transform = transform;
+        self
+    }
+    pub fn with_material(mut self, material: VMaterial) -> Self {
+        self.material = material;
+        self
     }
 }
 impl VIntersectable for VSphere {
@@ -53,12 +64,16 @@ impl VIntersectable for VSphere {
     fn normal_at_in_object_space(&self, object_space_point: VTuple) -> VTuple {
         (object_space_point - VTuple::point(0.0, 0.0, 0.0)).normalize()
     }
+    fn material(&self) -> VMaterial {
+        self.material
+    }
 }
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::{zequality::ZEq, F};
     use std::f64::consts::PI;
+    use crate::canvas::vcolor::VColor;
 
     #[test]
     fn a_ray_intersects_a_sphere_at_two_points() {
@@ -126,9 +141,8 @@ mod tests {
 
     #[test]
     fn changing_a_spheres_transform() {
-        let mut s = VSphere::default();
         let m = VMatrix::translation(2.0, 3.0, 4.0);
-        s.set_transform(m);
+        let s = VSphere::default().with_transform(m);
 
         assert_zeq!(s.transform, m);
     }
@@ -138,8 +152,7 @@ mod tests {
         let o = VTuple::point(0.0, 1.5, -5.0);
         let d = VTuple::vector(0.0, 0.0, 1.0);
         let r = VRay::new(o, d);
-        let mut s = VSphere::default();
-        s.set_transform(VMatrix::scaling(2.0, 2.0, 2.0));
+        let s = VSphere::default().with_transform(VMatrix::scaling(2.0, 2.0, 2.0));
         let xs = s.intersect(r);
 
         assert_eq!(2, xs.len());
@@ -150,8 +163,7 @@ mod tests {
         let o = VTuple::point(0.0, 0.0, -5.0);
         let d = VTuple::vector(0.0, 0.0, 1.0);
         let r = VRay::new(o, d);
-        let mut s = VSphere::default();
-        s.set_transform(VMatrix::translation(5.0, 0.0, 0.0));
+        let s = VSphere::default().with_transform(VMatrix::translation(5.0, 0.0, 0.0));
         let xs = s.intersect(r);
 
         assert_eq!(0, xs.len());
@@ -201,7 +213,7 @@ mod tests {
 
     #[test]
     fn computing_the_normal_on_a_translated_sphere() {
-        let s = VSphere::new(Some(VMatrix::translation(0.0, 1.0, 0.0)));
+        let s = VSphere::default().with_transform(VMatrix::translation(0.0, 1.0, 0.0));
         let p = VTuple::point(0.0, 1.70711, -0.70711);
         let n = s.normal_at(p);
 
@@ -212,9 +224,8 @@ mod tests {
 
     #[test]
     fn computing_the_normal_on_a_scaled_and_rotated_sphere() {
-        let s = VSphere::new(Some(
-            VMatrix::scaling(1.0, 0.5, 1.0) * VMatrix::rotation_z(PI / 5.0),
-        ));
+        let s = VSphere::default()
+            .with_transform(VMatrix::scaling(1.0, 0.5, 1.0) * VMatrix::rotation_z(PI / 5.0));
         let sqrt2_over_2 = (2.0 as F).sqrt() / 2.0;
         let p = VTuple::point(0.0, sqrt2_over_2, -sqrt2_over_2);
         let n = s.normal_at(p);
@@ -236,9 +247,8 @@ mod tests {
 
     #[test]
     fn the_normal_vector_is_normalized_on_transformed_sphere() {
-        let s = VSphere::new(Some(
-            VMatrix::scaling(1.0, 0.5, 1.0) * VMatrix::rotation_z(PI / 5.0),
-        ));
+        let s = VSphere::default()
+            .with_transform(VMatrix::scaling(1.0, 0.5, 1.0) * VMatrix::rotation_z(PI / 5.0));
         let sqrt2_over_2 = (2.0 as F).sqrt() / 2.0;
         let p = VTuple::point(0.0, sqrt2_over_2, -sqrt2_over_2);
         let n = s.normal_at(p);
@@ -246,25 +256,25 @@ mod tests {
         assert_zeq!(n.normalize(), n);
     }
 
-    // #[test]
-    // fn sphere_has_default_phong_material() {
-    //     let s = Sphere::default();
-    //     let m = Material::default();
+    #[test]
+    fn sphere_has_default_phong_material() {
+        let s = VSphere::default();
+        let m = VMaterial::default();
 
-    //     assert_zeq!(s.material, m);
-    // }
+        assert_zeq!(s.material, m);
+    }
 
-    // #[test]
-    // fn sphere_may_be_assigned_a_material() {
-    //     let phong = Phong::default()
-    //         .with_color(Color::new(1.0, 1.0, 0.0))
-    //         .with_ambient(0.05)
-    //         .with_diffuse(0.7)
-    //         .with_specular(0.95)
-    //         .with_shininess(400.0);
-    //     let m = Material::from(phong);
-    //     let s = Sphere::default().with_material(m);
+    #[test]
+    fn sphere_may_be_assigned_a_material() {
+        let phong = VPhong::default()
+            .with_color(VColor::new(1.0, 1.0, 0.0))
+            .with_ambient(0.05)
+            .with_diffuse(0.7)
+            .with_specular(0.95)
+            .with_shininess(400.0);
+        let m = VMaterial::from(phong);
+        let s = VSphere::default().with_material(m);
 
-    //     assert_zeq!(s.material, m);
-    // }
+        assert_zeq!(s.material, m);
+    }
 }

@@ -15,6 +15,7 @@ impl ZEq<F> for F
         return (*self - other).abs() < F::from(0.00001);
     }
 }
+
 impl<T> ZEq<Option<T>> for Option<T>
 where
   T: Clone,

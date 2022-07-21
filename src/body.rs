@@ -4,11 +4,11 @@ use crate::{
     ray::VRay,
     sphere::VSphere,
     tuple::VTuple,
-    F,
+    F, material::VMaterial,
 };
 
 pub trait VIntersectable {
-    // fn material(&self) -> Material;
+    fn material(&self) -> VMaterial;
     fn transform(&self) -> VMatrix<4>;
     fn normal_at_in_object_space(&self, object_space_point: VTuple) -> VTuple;
 
@@ -57,6 +57,11 @@ impl VIntersectable for VBody {
         match *self {
             VBody::VSphere(ref sphere) => sphere.normal_at_in_object_space(object_space_point),
             //VBody::VPlane(ref plane) => plane.transform(),
+        }
+    }
+    fn material(&self)->VMaterial{
+        match *self {
+            VBody::VSphere(ref sphere)=>{sphere.material()}            
         }
     }
 }
