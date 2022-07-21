@@ -1,7 +1,42 @@
 use std::ops;
 
-use crate::body::VBody;
+use crate::body::*;
 use crate::{ray::VRay, F};
+
+use crate::tuple::VTuple;
+
+#[derive(Debug, Clone)]
+pub struct VComputedIntersection<'a> {
+    pub intersection: &'a VIntersection,
+    pub pos: VTuple,
+    pub point: VTuple,
+    pub normalv: VTuple,
+    pub camv: VTuple,
+    pub reflectv: VTuple,
+    pub inside: bool,
+}
+
+impl<'a> VComputedIntersection<'a> {
+    pub fn new(
+        intersection: &'a VIntersection,
+        pos: VTuple,
+        point: VTuple,
+        normalv: VTuple,
+        camv: VTuple,
+        reflectv: VTuple,
+        inside: bool,
+    ) -> Self {
+        VComputedIntersection {
+            intersection,
+            pos,
+            point,
+            normalv,
+            camv,
+            reflectv,
+            inside,
+        }
+    }
+}
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct VIntersection {
@@ -13,6 +48,23 @@ pub struct VIntersection {
 impl VIntersection {
     pub fn new(t: F, ray: VRay, body: VBody) -> VIntersection {
         VIntersection { t, ray, body }
+    }
+
+    pub fn get_computed(&self) -> VComputedIntersection {
+        let position = self.ray.position(self.t);
+        let mut normalv = self.body.normal_at(position);
+        let eyev = -self.ray.direction;
+        let inside = normalv.dot(&eyev) < 0.0;
+
+        if inside {
+            normalv = -normalv;
+        }
+
+        let over_point = position + normalv * 0.0001;
+
+        let reflectv = self.ray.direction.reflected(normalv);
+
+        VComputedIntersection::new(self, position, over_point, normalv, eyev, reflectv, inside)
     }
 }
 

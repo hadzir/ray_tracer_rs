@@ -1,6 +1,6 @@
 use crate::canvas::to_rgba32::ToRGBA32;
 use crate::canvas::vcanvas::Sized;
-use png::{Compression, Encoder};
+use png::Encoder;
 pub trait ToPNG {
     fn to_png(&self) -> Vec<u8>;
 }
