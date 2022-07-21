@@ -41,10 +41,10 @@ impl ZEq<VMaterial> for VMaterial {
 
 pub struct VPhong {
     pub col: VColor,
-    amb: F,
-    dif: F,
-    spc: F,
-    shi: F,
+    pub amb: F,
+    pub dif: F,
+    pub spc: F,
+    pub shi: F,
 }
 impl VPhong {
     pub fn new(color: VColor, ambient: F, diffuse: F, specular: F, shininess: F) -> Self {

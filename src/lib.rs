@@ -11,5 +11,5 @@ pub mod ray;
 pub mod sphere;
 pub mod tuple;
 pub mod world;
-
+pub mod computed_intersection;
 pub type F = f64;

@@ -1,5 +1,5 @@
 use crate::{canvas::vcolor::VColor, tuple::VTuple};
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy,PartialEq)]
 pub struct VPointLight {
     pub pos: VTuple,
     pub col: VColor,

@@ -12,7 +12,7 @@ pub trait ZEq<T>
 impl ZEq<F> for F 
 {
     fn zeq(&self, other: F) -> bool {
-        return (*self - other).abs() < F::from(0.00001);
+        return (*self - other).abs() < F::from(0.0001);
     }
 }
 

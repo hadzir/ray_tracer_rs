@@ -1,42 +1,8 @@
 use std::ops;
 
 use crate::body::*;
+use crate::computed_intersection::*;
 use crate::{ray::VRay, F};
-
-use crate::tuple::VTuple;
-
-#[derive(Debug, Clone)]
-pub struct VComputedIntersection<'a> {
-    pub intersection: &'a VIntersection,
-    pub pos: VTuple,
-    pub point: VTuple,
-    pub normalv: VTuple,
-    pub camv: VTuple,
-    pub reflectv: VTuple,
-    pub inside: bool,
-}
-
-impl<'a> VComputedIntersection<'a> {
-    pub fn new(
-        intersection: &'a VIntersection,
-        pos: VTuple,
-        point: VTuple,
-        normalv: VTuple,
-        camv: VTuple,
-        reflectv: VTuple,
-        inside: bool,
-    ) -> Self {
-        VComputedIntersection {
-            intersection,
-            pos,
-            point,
-            normalv,
-            camv,
-            reflectv,
-            inside,
-        }
-    }
-}
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct VIntersection {
@@ -59,9 +25,7 @@ impl VIntersection {
         if inside {
             normalv = -normalv;
         }
-
         let over_point = position + normalv * 0.0001;
-
         let reflectv = self.ray.direction.reflected(normalv);
 
         VComputedIntersection::new(self, position, over_point, normalv, eyev, reflectv, inside)
@@ -106,11 +70,116 @@ impl ops::Index<usize> for VIntersections {
     }
 }
 
-//   impl ops::IntoIterator for VIntersections {
-//     type Item = VIntersection;
-//     type IntoIter = std::vec::IntoIter<Self::Item>;
+impl IntoIterator for VIntersections {
+    type Item = VIntersection;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
 
-//     fn into_iter(self) -> Self::IntoIter {
-//       self.data.into_iter()
-//     }
-//   }
+    fn into_iter(self) -> Self::IntoIter {
+        self.data.into_iter()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::material::*;
+    use crate::matrix::*;
+    use crate::sphere::*;
+    use crate::tuple::*;
+    use crate::zequality::*;
+
+    #[test]
+    fn the_hit_when_all_intersections_have_positive_t() {
+        let s = VSphere::default();
+        let r = VRay::new(VTuple::point(1.0, 1.0, 1.0), VTuple::vector(0.0, 0.0, 1.0));
+        let i1 = VIntersection::new(1.0, r, VBody::from(s));
+        let i2 = VIntersection::new(2.0, r, VBody::from(s));
+        let xs = VIntersections::new(vec![i2, i1]);
+
+        assert_eq!(xs.hit(), Some(&i1));
+    }
+
+    #[test]
+    fn the_hit_when_some_intersections_have_negative_t() {
+        let s = VSphere::default();
+        let r = VRay::new(VTuple::point(1.0, 1.0, 1.0), VTuple::vector(0.0, 0.0, 1.0));
+        let i1 = VIntersection::new(-1.0, r, VBody::from(s));
+        let i2 = VIntersection::new(1.0, r, VBody::from(s));
+        let xs = VIntersections::new(vec![i2, i1]);
+
+        assert_eq!(xs.hit(), Some(&i2));
+    }
+
+    #[test]
+    fn the_hit_when_all_intersections_have_negative_t() {
+        let s = VSphere::default();
+        let r = VRay::new(VTuple::point(1.0, 1.0, 1.0), VTuple::vector(0.0, 0.0, 1.0));
+        let i1 = VIntersection::new(-2.0, r, VBody::from(s));
+        let i2 = VIntersection::new(-1.0, r, VBody::from(s));
+        let xs = VIntersections::new(vec![i2, i1]);
+
+        assert_eq!(xs.hit(), None);
+    }
+
+    #[test]
+    fn precomputing_the_state_of_an_intersection() {
+        let r = VRay::new(VTuple::point(0.0, 0.0, -5.0), VTuple::vector(0.0, 0.0, 1.0));
+        let body = VBody::from(VSphere::default());
+        let i = VIntersection::new(4.0, r, body);
+        let c = i.get_computed();
+
+        assert_eq!(c.intersection, &i);
+        assert_zeq!(c.point, VTuple::point(0.0, 0.0, -1.0));
+        assert_zeq!(c.camv, VTuple::vector(0.0, 0.0, -1.0));
+        assert_zeq!(c.normalv, VTuple::vector(0.0, 0.0, -1.0));
+    }
+
+    // #[test]
+    // fn precomputing_reflection_vector() {
+    //     let body = VBody::from(VPlane::default());
+    //     let r = VRay::new(
+    //         VTuple::point(0.0, 1.0, -1.0),
+    //         VTuple::vector(0.0, -(2.0 as F).sqrt() / 2.0, (2.0 as F).sqrt() / 2.0),
+    //     );
+    //     let intersection = VIntersection::new((2.0 as F).sqrt(), r, body);
+    //     let computations = intersection.get_computed();
+
+    //     assert_zeq!(
+    //         computations.reflectv,
+    //         VTuple::vector(0.0, (2.0 as F).sqrt() / 2.0, (2.0 as F).sqrt() / 2.0)
+    //     );
+    // }
+
+    // #[test]
+    // fn the_hit_when_an_intersection_occurs_on_the_outside() {
+    //     let r = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
+    //     let body = Body::from(Sphere::default());
+    //     let i = Intersection::new(4.0, r, body);
+    //     let c = i.get_computed();
+
+    //     assert_eq!(c.inside, false);
+    // }
+
+    // #[test]
+    // fn the_hit_when_an_intersection_occurs_on_the_inside() {
+    //     let r = Ray::new(Tuple::point(0.0, 0.0, 0.0), Tuple::vector(0.0, 0.0, 1.0));
+    //     let body = Body::from(Sphere::default());
+    //     let i = Intersection::new(1.0, r, body);
+    //     let c = i.get_computed();
+
+    //     assert_eq!(c.inside, true);
+    //     assert_eq!(c.normalv, Tuple::vector(0.0, 0.0, -1.0));
+    // }
+
+    // #[test]
+    // fn the_hit_should_offset_the_point() {
+    //     let material = Material::default();
+    //     let r = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0));
+    //     let s1 = Sphere::new(material, Matrix::translation(0.0, 0.0, 1.0));
+    //     let i = Intersection::new(5.0, r, s1.into());
+    //     let c = i.get_computed();
+
+    //     assert!(c.over_point.z < -EPSILON / 2.0);
+    //     assert!(c.point.z > c.over_point.z);
+    // }
+}
