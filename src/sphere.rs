@@ -62,7 +62,7 @@ impl VIntersectable for VSphere {
         self.transform
     }
     fn normal_at_in_object_space(&self, object_space_point: VTuple) -> VTuple {
-        (object_space_point - VTuple::point(0.0, 0.0, 0.0)).normalize()
+        (object_space_point - VTuple::point(0.0, 0.0, 0.0)).normalized()
     }
     fn material(&self) -> VMaterial {
         self.material
@@ -242,7 +242,7 @@ mod tests {
         let p = VTuple::point(sqrt3_over_3, sqrt3_over_3, sqrt3_over_3);
         let n = s.normal_at(p);
 
-        assert_zeq!(n.normalize(), n);
+        assert_zeq!(n.normalized(), n);
     }
 
     #[test]
@@ -253,7 +253,7 @@ mod tests {
         let p = VTuple::point(0.0, sqrt2_over_2, -sqrt2_over_2);
         let n = s.normal_at(p);
 
-        assert_zeq!(n.normalize(), n);
+        assert_zeq!(n.normalized(), n);
     }
 
     #[test]

@@ -59,7 +59,7 @@ fn ray_trace(canvas_size: usize) {
             let world_x = -half + canvas_pixel_world_size * x as f64;
             let world_y = half - canvas_pixel_world_size * y as f64;
             let wall_point = VTuple::point(world_x, world_y, wall_position_z);
-            let ray = VRay::new(ray_origin, (wall_point - ray_origin).normalize());
+            let ray = VRay::new(ray_origin, (wall_point - ray_origin).normalized());
             let xs = sphere.intersect(ray);
 
             let hit = xs.hit();

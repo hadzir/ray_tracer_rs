@@ -18,7 +18,7 @@ fn main() {
     );
     let mut projectile = Projectile::new(
         VTuple::point(0.0, 1.0, 0.0),
-        VTuple::vector(1.0, 1.8, 0.0).normalize() * 11.25,
+        VTuple::vector(1.0, 1.8, 0.0).normalized() * 11.25,
     );
     //Canvas space
     let mut cnv = VCanvas::new(1000, 1000);

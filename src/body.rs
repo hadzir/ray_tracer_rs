@@ -33,7 +33,7 @@ pub trait VIntersectable {
         // w component could be affected if the transformation matrix included a
         // translation
         world_normal.w = 0.0;
-        world_normal.normalize()
+        world_normal.normalized()
     }
 }
 #[derive(Debug, Copy, Clone, PartialEq)]

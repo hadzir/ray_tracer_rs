@@ -58,15 +58,35 @@ impl VTuple {
         return (self.x.powi(2) + self.y.powi(2) + self.z.powi(2) + self.w.powi(2)).sqrt();
     }
 
-    pub fn normalize(&self) -> Self {
+    pub fn normalize(mut self) {
+        let nv = self/self.magnitude();
+        self.x = nv.x;
+        self.y = nv.y;
+        self.z = nv.z;
+    }
+    pub fn normalized(&self) -> Self {
         return *self / self.magnitude();
     }
-
     pub fn dot(&self, &other: &Self) -> F {
         return self.x * other.x + self.y * other.y + self.z * other.z + self.w * other.w;
     }
 
-    pub fn cross(&self, &other: &Self) -> Self {
+    pub fn cross(mut self, &other: &Self) {
+        if !(self.is_vector() && other.is_vector()) {
+            panic!("Cross product can only be calculated for two errors")
+        }
+
+        let v= VTuple::vector(
+            self.y * other.z - self.z * other.y,
+            self.z * other.x - self.x * other.z,
+            self.x * other.y - self.y * other.x,
+        );
+
+        self.x = v.x;
+        self.y = v.y;
+        self.z = v.z;
+    }
+    pub fn crossed(&self, &other: &Self) -> Self {
         if !(self.is_vector() && other.is_vector()) {
             panic!("Cross product can only be calculated for two errors")
         }
@@ -77,6 +97,7 @@ impl VTuple {
             self.x * other.y - self.y * other.x,
         );
     }
+
     pub fn reflect(&mut self, normal: VTuple) {
         let reflection = *self - normal * 2.0 * self.dot(&normal);
         self.x = reflection.x;
@@ -334,7 +355,7 @@ mod tests {
     fn normalize_vector_4_0_0() {
         let v = VTuple::vector(4.0, 0.0, 0.0);
 
-        let result = v.normalize();
+        let result = v.normalized();
         let expected_result = VTuple::vector(1.0, 0.0, 0.0);
 
         assert_zeq!(result, expected_result);
@@ -343,7 +364,7 @@ mod tests {
     fn normalize_vector_1_2_3() {
         let v = VTuple::vector(1.0, 2.0, 3.0);
 
-        let result = v.normalize();
+        let result = v.normalized();
         let expected_result = VTuple::vector(0.26726, 0.53452, 0.80178);
 
         assert_zeq!(result, expected_result);
@@ -352,7 +373,7 @@ mod tests {
     fn magnitude_of_normalized_vector_is_1() {
         let v = VTuple::vector(1.0, 2.0, 3.0);
 
-        let result = v.normalize().magnitude();
+        let result = v.normalized().magnitude();
         let expected_result = 1.0;
 
         assert_zeq!(result, expected_result);
@@ -372,7 +393,7 @@ mod tests {
         let v1 = VTuple::vector(1.0, 2.0, 3.0);
         let v2 = VTuple::vector(2.0, 3.0, 4.0);
 
-        let result = v1.cross(&v2);
+        let result = v1.crossed(&v2);
         let expected_result = VTuple::vector(-1.0, 2.0, -1.0);
 
         assert!(result.is_vector());
@@ -383,7 +404,7 @@ mod tests {
         let v1 = VTuple::vector(1.0, 2.0, 3.0);
         let v2 = VTuple::vector(2.0, 3.0, 4.0);
 
-        let result = v2.cross(&v1);
+        let result = v2.crossed(&v1);
         let expected_result = VTuple::vector(1.0, -2.0, 1.0);
 
         assert!(result.is_vector());

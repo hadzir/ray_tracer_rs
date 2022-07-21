@@ -12,4 +12,5 @@ pub mod sphere;
 pub mod tuple;
 pub mod world;
 pub mod computed_intersection;
+pub mod camera;
 pub type F = f64;

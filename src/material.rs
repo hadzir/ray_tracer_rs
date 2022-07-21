@@ -98,7 +98,7 @@ impl Illuminated for VPhong {
         let eff_col = self.col * light.col;
         light_amb = eff_col * self.amb;
 
-        let lightv = (light.pos - pos).normalize();
+        let lightv = (light.pos - pos).normalized();
         let light_dot_normal = lightv.dot(&normal);
         if light_dot_normal < 0.0 {
             light_dif = VColor::black();
@@ -128,7 +128,7 @@ mod tests {
         let m = VPhong::default();
 
         assert_zeq!(m.col, VColor::white());
-        assert_zeq!(m.amb, 0.1);
+        assert_zeq!(m.amb, 0.05);
         assert_zeq!(m.dif, 0.9);
         assert_zeq!(m.spc, 0.9);
         assert_zeq!(m.shi, 200.0);
