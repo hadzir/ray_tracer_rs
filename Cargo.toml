@@ -3,13 +3,6 @@ name = "ray_tracer"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-[lib]
-crate-type = ["cdylib","rlib"]
-[features]
-default = ["console_error_panic_hook"]
-[dev-dependencies]
-wasm-bindgen-test="0.3.31"
 [profile.release]
 opt-level=3
 lto=true
@@ -18,14 +11,3 @@ indicatif = "0.16.2"
 itertools = "0.10.3"
 png = "0.17.5"
 rayon = "1.5.3"
-wasm-bindgen = "0.2.81"
-console_error_panic_hook={version="0.1.6",optional=true}
-wee_alloc = {version="0.4.5", optional=true}
-js-sys = "0.3.58"
-
-[dependencies.web-sys]
-version="0.3.58"
-features=["ImageData"]
-
-# [package.metadata.wasm-pack.profile.release]
-# wasm-opt=false
