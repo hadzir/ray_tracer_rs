@@ -3,6 +3,7 @@ use crate::{
     matrix::VMatrix,
     ray::VRay,
     sphere::VSphere,
+    plane::VPlane,
     tuple::VTuple,
     F, material::VMaterial,
 };
@@ -11,9 +12,7 @@ pub trait VIntersectable {
     fn material(&self) -> VMaterial;
     fn transform(&self) -> VMatrix<4>;
     fn normal_at_in_object_space(&self, object_space_point: VTuple) -> VTuple;
-
     fn intersect_in_object_space(&self, object_space_ray: VRay) -> Vec<(F, VBody)>;
-
     fn intersect(&self, ray: VRay) -> VIntersections {
         let object_space_ray = ray.transformed(self.transform().inverted());
         let ts = self.intersect_in_object_space(object_space_ray);
@@ -39,34 +38,41 @@ pub trait VIntersectable {
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum VBody {
     VSphere(VSphere),
+    VPlane(VPlane)
 }
 impl VIntersectable for VBody {
     fn intersect_in_object_space(&self, object_space_ray: VRay) -> Vec<(F, VBody)> {
         match *self {
             VBody::VSphere(ref sphere) => sphere.intersect_in_object_space(object_space_ray),
-            //VBody::Plane(ref plane) => plane.intersect_in_object_space(object_space_ray),
+            VBody::VPlane(ref plane) => plane.intersect_in_object_space(object_space_ray),
         }
     }
     fn transform(&self) -> VMatrix<4> {
         match *self {
             VBody::VSphere(ref sphere) => sphere.transform(),
-            //VBody::VPlane(ref plane) => plane.transform(),
+            VBody::VPlane(ref plane) => plane.transform(),
         }
     }
     fn normal_at_in_object_space(&self, object_space_point: VTuple) -> VTuple {
         match *self {
             VBody::VSphere(ref sphere) => sphere.normal_at_in_object_space(object_space_point),
-            //VBody::VPlane(ref plane) => plane.transform(),
+            VBody::VPlane(ref plane) => plane.normal_at_in_object_space(object_space_point),
         }
     }
     fn material(&self)->VMaterial{
         match *self {
-            VBody::VSphere(ref sphere)=>{sphere.material()}            
+            VBody::VSphere(ref sphere)=>{sphere.material()}       
+            VBody::VPlane(ref plane) => {plane.material()}      ,     
         }
     }
 }
 impl From<VSphere> for VBody {
     fn from(sphere: VSphere) -> Self {
         VBody::VSphere(sphere)
+    }
+}
+impl From<VPlane> for VBody {
+    fn from(plane: VPlane) -> Self {
+        VBody::VPlane(plane)
     }
 }

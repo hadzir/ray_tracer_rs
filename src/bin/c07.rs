@@ -2,21 +2,21 @@ use indicatif::ProgressBar;
 use itertools::Itertools;
 use ray_tracer::body::VBody;
 use ray_tracer::camera::VCamera;
+use ray_tracer::canvas::to_png::ToPNG;
+use ray_tracer::canvas::vcanvas::*;
+use ray_tracer::canvas::vcolor::VColor;
 use ray_tracer::light::VPointLight;
 use ray_tracer::material::VMaterial;
 use ray_tracer::material::VPhong;
 use ray_tracer::matrix::VMatrix;
-use ray_tracer::world::VWorld;
-use std::f64::consts::PI;
-use std::sync::Mutex;
-
-use ray_tracer::canvas::to_png::ToPNG;
-use ray_tracer::canvas::vcanvas::*;
-use ray_tracer::canvas::vcolor::VColor;
+use ray_tracer::plane::VPlane;
 use ray_tracer::sphere::*;
 use ray_tracer::tuple::*;
+use ray_tracer::world::VWorld;
 use rayon::prelude::*;
+use std::f64::consts::PI;
 use std::fs::write;
+use std::sync::Mutex;
 
 macro_rules! time_it {
     ($context:literal, $s:stmt) => {
@@ -62,15 +62,14 @@ fn ray_trace(canvas_width: usize, canvas_height: usize) {
         spc: 0.0,
         ..VPhong::default()
     });
-    let floor = VSphere::default()
+    let floor = VPlane::default()
+        .with_material(wall_mat);
+    let wall1 = VPlane::default()
         .with_material(wall_mat)
-        .with_transform(VMatrix::scaling(10.0, 0.01, 10.0));
-    let wall1 = VSphere::default()
+        .with_transform(VMatrix::rotation_x(PI/4.0));
+    let wall2 = VPlane::default()
         .with_material(wall_mat)
-        .with_transform(VMatrix::scaling(0.01, 10.0, 10.0));
-    let wall2 = VSphere::default()
-        .with_material(wall_mat)
-        .with_transform(VMatrix::scaling(10.0, 10.0, 0.01));
+        .with_transform(VMatrix::rotation_z(PI/4.0));
 
     let world = VWorld::new(
         vec![
