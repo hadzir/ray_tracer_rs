@@ -13,4 +13,5 @@ pub mod tuple;
 pub mod world;
 pub mod computed_intersection;
 pub mod camera;
+pub mod animator;
 pub type F = f64;
