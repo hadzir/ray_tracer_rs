@@ -3,6 +3,7 @@ use crate::canvas::vcolor::VColor;
 use crate::intersections::*;
 use crate::material::Illuminated;
 use crate::ray::*;
+use crate::tuple::VTuple;
 use crate::{body::VBody, light::VPointLight};
 // use crate::canvas::vcolor::*;
 // use crate::zequality::*;
@@ -31,9 +32,20 @@ impl VWorld {
             let material = hit.body.material();
 
             //implement proper lighting to allow multiple lights
-            material.lighting(self.lights[0], c.pos, c.camv, c.normalv)
+            material.lighting(self.lights[0], c.pos, c.camv, c.normalv, self.is_shadowed(c.overpoint))
         } else {
             VColor::black()
+        }
+    }
+    pub fn is_shadowed(&self, pos: VTuple) -> bool {
+        let shadowv = self.lights[0].pos - pos;
+        let xs = self.intersect(VRay::new(pos, shadowv.normalized()));
+
+        if let Some(hit) = xs.hit() {
+            //Only cast a shadow if hit object is between light source and point
+            return hit.t<shadowv.magnitude()
+        } else {
+            return false;
         }
     }
     // pub fn color_at(&self, ray: VRay) -> VColor {
@@ -151,7 +163,7 @@ mod tests {
         let r = VRay::new(VTuple::point(0.0, 0.0, -5.0), VTuple::vector(0.0, 0.0, 1.0));
         let c = w.color_at(r);
 
-        assert_zeq!(c, VColor::new(0.38066, 0.47583, 0.2855));
+        assert_zeq!(c, VColor::new(0.3406611930810344, 0.4258264913512929, 0.2554958948107757));
     }
 
     //   #[test]

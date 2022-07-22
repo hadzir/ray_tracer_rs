@@ -3,7 +3,7 @@ use crate::tuple::VTuple;
 use crate::zequality::ZEq;
 use crate::{canvas::vcolor::VColor, F};
 pub trait Illuminated {
-    fn lighting(&self, light: VPointLight, pos: VTuple, cam: VTuple, normal: VTuple) -> VColor;
+    fn lighting(&self, light: VPointLight, pos: VTuple, cam: VTuple, normal: VTuple,shadowed:bool) -> VColor;
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -12,9 +12,9 @@ pub enum VMaterial {
     VPhong(VPhong),
 }
 impl Illuminated for VMaterial {
-    fn lighting(&self, light: VPointLight, pos: VTuple, cam: VTuple, normal: VTuple) -> VColor {
+    fn lighting(&self, light: VPointLight, pos: VTuple, cam: VTuple, normal: VTuple, shadowed:bool) -> VColor {
         match *self {
-            VMaterial::VPhong(ref m) => m.lighting(light, pos, cam, normal),
+            VMaterial::VPhong(ref m) => m.lighting(light, pos, cam, normal,shadowed),
         }
     }
 }
@@ -57,7 +57,7 @@ impl VPhong {
         }
     }
     pub fn default() -> VPhong {
-        VPhong::new(VColor::white(), 0.1, 0.9, 0.9, 200.0)
+        VPhong::new(VColor::white(), 0.05, 0.9, 0.9, 200.0)
     }
     pub fn with_color(mut self, col: VColor) -> VPhong {
         self.col = col;
@@ -90,13 +90,16 @@ impl ZEq<VPhong> for VPhong {
     }
 }
 impl Illuminated for VPhong {
-    fn lighting(&self, light: VPointLight, pos: VTuple, cam: VTuple, normal: VTuple) -> VColor {
+    fn lighting(&self, light: VPointLight, pos: VTuple, cam: VTuple, normal: VTuple,shadowed:bool) -> VColor {
         let light_amb: VColor;
         let light_dif: VColor;
         let light_spc: VColor;
 
         let eff_col = self.col * light.col;
         light_amb = eff_col * self.amb;
+        
+        if shadowed{return light_amb}
+
 
         let lightv = (light.pos - pos).normalized();
         let light_dot_normal = lightv.dot(&normal);
@@ -121,14 +124,14 @@ impl Illuminated for VPhong {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{canvas::vcolor::VColor};
+    use crate::{canvas::vcolor::VColor, body::VBody, sphere::VSphere};
 
     #[test]
     fn default_phong_material() {
         let m = VPhong::default();
 
         assert_zeq!(m.col, VColor::white());
-        assert_zeq!(m.amb, 0.1);
+        assert_zeq!(m.amb, 0.05);
         assert_zeq!(m.dif, 0.9);
         assert_zeq!(m.spc, 0.9);
         assert_zeq!(m.shi, 200.0);
@@ -166,9 +169,9 @@ mod tests {
         let normalv = VTuple::vector(0.0, 0.0, -1.0);
         let light = VPointLight::new(VTuple::point(0.0, 0.0, -10.0), VColor::new(1.0, 1.0, 1.0));
 
-        let actual_result = m.lighting(light, position, eyev, normalv);
+        let actual_result = m.lighting(light, position, eyev, normalv,false);
 
-        let expected_result = VColor::new(1.9, 1.9, 1.9);
+        let expected_result = VColor::new(1.85, 1.85, 1.85);
 
         assert_zeq!(actual_result, expected_result);
     }
@@ -184,9 +187,9 @@ mod tests {
         let normalv = VTuple::vector(0.0, 0.0, -1.0);
         let light = VPointLight::new(VTuple::point(0.0, 0.0, -10.0), VColor::new(1.0, 1.0, 1.0));
 
-        let actual_result = m.lighting(light, position, eyev, normalv);
+        let actual_result = m.lighting(light, position, eyev, normalv,false);
 
-        let expected_result = VColor::new(1.0, 1.0, 1.0);
+        let expected_result = VColor::new(0.95, 0.95, 0.95);
 
         assert_zeq!(actual_result, expected_result);
     }
@@ -201,9 +204,9 @@ mod tests {
         let normalv = VTuple::vector(0.0, 0.0, -1.0);
         let light = VPointLight::new(VTuple::point(0.0, 10.0, -10.0), VColor::new(1.0, 1.0, 1.0));
 
-        let actual_result = m.lighting(light, position, eyev, normalv);
+        let actual_result = m.lighting(light, position, eyev, normalv,false);
 
-        let expected_result = VColor::new(0.7364, 0.7364, 0.7364);
+        let expected_result = VColor::new(0.6864, 0.6864, 0.6864);
 
         assert_zeq!(actual_result, expected_result);
     }
@@ -219,9 +222,9 @@ mod tests {
         let normalv = VTuple::vector(0.0, 0.0, -1.0);
         let light = VPointLight::new(VTuple::point(0.0, 10.0, -10.0), VColor::new(1.0, 1.0, 1.0));
 
-        let actual_result = m.lighting( light, position, eyev, normalv);
+        let actual_result = m.lighting( light, position, eyev, normalv,false);
 
-        let expected_result = VColor::new(1.6364, 1.6364, 1.6364);
+        let expected_result = VColor::new(1.5864, 1.5864, 1.5864);
 
         assert_zeq!(actual_result, expected_result);
     }
@@ -236,29 +239,29 @@ mod tests {
         let normalv = VTuple::vector(0.0, 0.0, -1.0);
         let light = VPointLight::new(VTuple::point(0.0, 0.0, 10.0), VColor::new(1.0, 1.0, 1.0));
 
-        let actual_result = m.lighting( light, position, eyev, normalv);
+        let actual_result = m.lighting( light, position, eyev, normalv,false);
 
-        let expected_result = VColor::new(0.1, 0.1, 0.1);
+        let expected_result = VColor::new(0.05, 0.05, 0.05);
 
         assert_zeq!(actual_result, expected_result);
     }
 
-    // #[test]
-    // fn lighting_with_the_surface_in_shadow() {
-    //     let m = VPhong::default();
-    //     let body = VBody::from(VSphere::default());
-    //     let position = VTuple::point(0.0, 0.0, 0.0);
+    #[test]
+    fn lighting_with_the_surface_in_shadow() {
+        let m = VPhong::default();
+        //let body = VBody::from(VSphere::default());
+        let position = VTuple::point(0.0, 0.0, 0.0);
 
-    //     let eyev = VTuple::vector(0.0, 0.0, -1.0);
-    //     let normalv = VTuple::vector(0.0, 0.0, -1.0);
-    //     let light = VPointLight::new(VTuple::point(0.0, 0.0, -10.0), VColor::new(1.0, 1.0, 1.0));
+        let eyev = VTuple::vector(0.0, 0.0, -1.0);
+        let normalv = VTuple::vector(0.0, 0.0, -1.0);
+        let light = VPointLight::new(VTuple::point(0.0, 0.0, -10.0), VColor::new(1.0, 1.0, 1.0));
 
-    //     let actual_result = m.lighting( light, position, eyev, normalv);
+        let actual_result = m.lighting( light, position, eyev, normalv,true);
 
-    //     let expected_result = VColor::new(0.1, 0.1, 0.1);
+        let expected_result = VColor::new(0.05, 0.05, 0.05);
 
-    //     assert_zeq!(actual_result, expected_result);
-    // }
+        assert_zeq!(actual_result, expected_result);
+    }
 
 //     #[test]
 //     fn phong_material_has_reflective_zero_by_default() {

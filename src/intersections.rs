@@ -129,7 +129,7 @@ mod tests {
         let c = i.get_computed();
 
         assert_eq!(c.intersection, &i);
-        assert_zeq!(c.point, VTuple::point(0.0, 0.0, -1.0));
+        assert_zeq!(c.pos, VTuple::point(0.0, 0.0, -1.0));
         assert_zeq!(c.camv, VTuple::vector(0.0, 0.0, -1.0));
         assert_zeq!(c.normalv, VTuple::vector(0.0, 0.0, -1.0));
     }

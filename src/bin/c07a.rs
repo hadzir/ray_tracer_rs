@@ -18,8 +18,10 @@ use std::f64::consts::PI;
 use std::fs::write;
 use std::sync::Mutex;
 
+//https://ezgif.com/apng-maker
+
 fn main() {
-    let animator = VAnimator::new(10);
+    let animator = VAnimator::new(100);
     animator.animate(|frame| {
         //World params
         let canvas_width = 600;
@@ -28,11 +30,9 @@ fn main() {
         let light_rotation = frame.linear_scale().with_range(vec![0.0, PI * 2.0]);
         let light_transform = VMatrix::rotation_y(light_rotation.scale(frame.currentf()));
         let light = VPointLight::new(
-            light_transform * VTuple::point(-5.0, 15.0, -10.0),
+            light_transform * VTuple::point(-3.0, 15.0, -3.0),
             VColor::new(0.9, 0.9, 0.9),
         );
-
-        println!("{:?}",light_transform* VTuple::point(-5.0, 15.0, -10.0));
 
         let pixel_count = canvas_width * canvas_height;
         let canvas_mutex = Mutex::new(VCanvas::new(canvas_width, canvas_height));
@@ -55,9 +55,12 @@ fn main() {
             col: VColor::green(),
             ..VPhong::default()
         });
+
+        let sphere2_translation = frame.linear_scale().with_range(vec![0.0, 5.0,0.0,5.0]);
+        let sphere2_transform = VMatrix::translation(0.0,sphere2_translation.scale(frame.currentf()),0.0);
         let sphere2 = VSphere::default()
             .with_material(material2)
-            .with_transform(VMatrix::translation(-3.0, 1.0, -6.0));
+            .with_transform(sphere2_transform*VMatrix::translation(-3.0, 1.0, -6.0));
 
         let wall_mat = VMaterial::from(VPhong {
             col: VColor::new(0.2, 0.2, 0.2),
@@ -66,13 +69,13 @@ fn main() {
         });
         let floor = VSphere::default()
             .with_material(wall_mat)
-            .with_transform(VMatrix::scaling(10.0, 0.01, 10.0));
+            .with_transform(VMatrix::translation(0.0, 0.0, 0.0)*VMatrix::scaling(20.0, 0.01, 20.0));
         let wall1 = VSphere::default()
             .with_material(wall_mat)
-            .with_transform(VMatrix::scaling(0.01, 10.0, 10.0));
+            .with_transform(VMatrix::translation(5.0, 0.0, 0.0)*VMatrix::scaling(0.01, 20.0, 20.0));
         let wall2 = VSphere::default()
             .with_material(wall_mat)
-            .with_transform(VMatrix::scaling(10.0, 10.0, 0.01));
+            .with_transform(VMatrix::translation(0.0, 0.0, 5.0)*VMatrix::scaling(20.0, 20.0, 0.01));
 
         let world = VWorld::new(
             vec![

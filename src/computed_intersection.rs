@@ -5,7 +5,7 @@ use crate::tuple::*;
 pub struct VComputedIntersection<'a> {
     pub intersection: &'a VIntersection,
     pub pos: VTuple,
-    pub point: VTuple,
+    pub overpoint:VTuple,
     pub normalv: VTuple,
     pub camv: VTuple,
     pub reflectv: VTuple,
@@ -16,7 +16,7 @@ impl<'a> VComputedIntersection<'a> {
     pub fn new(
         intersection: &'a VIntersection,
         pos: VTuple,
-        point: VTuple,
+        overpoint:VTuple,
         normalv: VTuple,
         camv: VTuple,
         reflectv: VTuple,
@@ -25,7 +25,7 @@ impl<'a> VComputedIntersection<'a> {
         VComputedIntersection {
             intersection,
             pos,
-            point,
+            overpoint,
             normalv,
             camv,
             reflectv,

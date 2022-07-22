@@ -68,7 +68,7 @@ fn ray_trace(canvas_size: usize) {
                 let pos=ray.position(hit.t);
                 let normal = hit.body.normal_at(pos);
                 let camv = -ray.direction;
-                let col= hit.body.material().lighting(light_source,pos,camv,normal);
+                let col= hit.body.material().lighting(light_source,pos,camv,normal,false);
                 let mut canvas = canvas_mutex.lock().unwrap();
                 canvas.write_pixel(x, y, col);
             }
