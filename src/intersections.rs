@@ -82,8 +82,6 @@ impl IntoIterator for VIntersections {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::material::*;
-    use crate::matrix::*;
     use crate::sphere::*;
     use crate::tuple::*;
     use crate::zequality::*;

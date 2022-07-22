@@ -1,0 +1,29 @@
+VCamera(
+    name: output1
+    width: 800
+    height: 600
+    fov: 0.785
+    from: [1, 2, 3.4]
+    to: [5.6, 7, 8]
+    up: [9.10, 11, -1.2] 
+)
+VPointlight(
+    type: point_light
+    at: [1.1, 2.2, 3.3]
+    intensity: [0.4, 0.5, 0.6]
+)
+VBody(
+    type: sphere
+    material:
+        type: phong
+        color: [1, 1, 1]
+        diffuse: 0.7
+        ambient: 0.1
+        specular: 0.0
+        shininess: 200
+    transforms:
+        - type: translate
+        to: [1, 2, 3]
+        - type: rotate_x
+        radians:3.14
+)

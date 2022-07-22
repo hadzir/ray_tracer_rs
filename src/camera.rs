@@ -1,4 +1,8 @@
+use serde::Deserialize;
+
 use crate::{matrix::VMatrix, ray::VRay, tuple::VTuple, F};
+
+#[derive(Debug,Clone, Copy,PartialEq,Deserialize)]
 pub struct VCamera {
     pub transform: VMatrix<4>,
     pub vsize: usize,
@@ -6,7 +10,6 @@ pub struct VCamera {
     pub fov: F,
     half_width: F,
     half_height: F,
-    aspect_ratio: F,
     pixel_size: F,
 }
 impl VCamera {
@@ -32,7 +35,6 @@ impl VCamera {
             fov,
             half_width,
             half_height,
-            aspect_ratio,
             pixel_size,
         }
     }

@@ -1,3 +1,5 @@
+use serde::Deserialize;
+
 use crate::{
     intersections::{VIntersection, VIntersections},
     matrix::VMatrix,
@@ -35,7 +37,7 @@ pub trait VIntersectable {
         world_normal.normalized()
     }
 }
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq,Deserialize)]
 pub enum VBody {
     VSphere(VSphere),
     VPlane(VPlane)

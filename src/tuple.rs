@@ -1,10 +1,12 @@
 use std::ops;
 
+use serde::Deserialize;
+
 use crate::F;
 
 use crate::zequality::ZEq;
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq,Deserialize)]
 pub struct VTuple {
     pub x: F,
     pub y: F,

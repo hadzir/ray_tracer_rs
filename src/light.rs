@@ -1,5 +1,7 @@
+use serde::Deserialize;
+
 use crate::{canvas::vcolor::VColor, tuple::VTuple};
-#[derive(Clone, Copy,PartialEq)]
+#[derive(Debug, Clone, Copy,PartialEq,Deserialize)]
 pub struct VPointLight {
     pub pos: VTuple,
     pub col: VColor,

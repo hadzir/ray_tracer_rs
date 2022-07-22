@@ -9,5 +9,8 @@ lto=true
 [dependencies]
 indicatif = "0.16.2"
 itertools = "0.10.3"
+nalgebra = {version="0.31.0",features=["serde-serialize"]	}
 png = "0.17.5"
 rayon = "1.5.3"
+ron = "0.7.1"
+serde = "1.0.140"

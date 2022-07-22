@@ -1,19 +1,31 @@
+use serde;
+use serde::de::DeserializeOwned;
+use serde::{Deserialize, Serialize};
+
 use crate::tuple::VTuple;
 use crate::zequality::ZEq;
 use crate::F;
+use nalgebra::matrix;
+use nalgebra::SMatrix;
+use std::borrow::BorrowMut;
 use std::convert::From;
 use std::ops;
 
 /*
 _______________________________________ DxD generics _____________________________________________
 */
-#[derive(Debug, Clone, Copy,PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct VMatrix<const D: usize> {
-    data: [[F; D]; D],
+    data: SMatrix<F, D, D>,
 }
 impl<const D: usize> From<[[F; D]; D]> for VMatrix<D> {
     fn from(data: [[F; D]; D]) -> Self {
-        VMatrix { data }
+        match D {
+            4 | 3 | 2 => VMatrix {
+                data: SMatrix::from(data),
+            },
+            _ => panic!("Invalid matrix size {:?}", D),
+        }
     }
 }
 impl<const D: usize> VMatrix<D> {
@@ -21,23 +33,24 @@ impl<const D: usize> VMatrix<D> {
         VMatrix::from([[0.0; D]; D])
     }
 }
-impl<const D: usize> ops::Index<usize> for VMatrix<D> {
-    type Output = [F; D];
-    fn index(&self, index: usize) -> &Self::Output {
-        &self.data[index]
+impl<const D: usize> ops::Index<(usize, usize)> for VMatrix<D> {
+    type Output = F;
+    fn index(&self, idx: (usize, usize)) -> &Self::Output {
+        &self.data.index(idx.0*D+idx.1)
     }
 }
-impl<const D: usize> ops::IndexMut<usize> for VMatrix<D> {
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        &mut self.data[index]
+impl<const D: usize> ops::IndexMut<(usize, usize)> for VMatrix<D> {
+    fn index_mut(&mut self, idx: (usize, usize)) -> &mut F {
+        self.data.index_mut(idx.0*D+idx.1)
     }
 }
-impl<const D: usize> ZEq<Self> for VMatrix<D>
-{
+
+
+impl<const D: usize> ZEq<Self> for VMatrix<D> {
     fn zeq(&self, other: Self) -> bool {
         for i in 0..D {
             for j in 0..D {
-                if !self[i][j].zeq(other[i][j]) {
+                if !self[(i, j)].zeq(other[(i, j)]) {
                     return false;
                 }
             }
@@ -52,7 +65,7 @@ impl<const D: usize> ops::Mul<VMatrix<D>> for VMatrix<D> {
         for row in 0..D {
             for col in 0..D {
                 for i in 0..D {
-                    tgt[row][col] += self[row][i] * other[i][col]
+                    tgt[(row, col)] += self[(row, i)] * other[(i, col)]
                 }
             }
         }
@@ -121,7 +134,7 @@ impl VMatrix<4> {
     pub fn identity() -> VMatrix<4> {
         let mut result: VMatrix<4> = VMatrix::default();
         for i in 0..4 {
-            result[i][i] = 1.0;
+            result[(i, i)] = 1.0;
         }
         result
     }
@@ -129,7 +142,7 @@ impl VMatrix<4> {
         let copy = self.clone();
         for i in 0..4 {
             for j in 0..4 {
-                self[i][j] = copy[j][i];
+                self[(i, j)] = copy[(j, i)];
             }
         }
     }
@@ -137,7 +150,7 @@ impl VMatrix<4> {
         let mut result: VMatrix<4> = VMatrix::default();
         for i in 0..4 {
             for j in 0..4 {
-                result[i][j] = self[j][i];
+                result[(i, j)] = self[(j, i)];
             }
         }
         result
@@ -156,7 +169,7 @@ impl VMatrix<4> {
         for row in 0..4 {
             for col in 0..4 {
                 let cofactor: F = copy.cofactor(row, col);
-                self[col][row] = cofactor / determinant; //stores transposed
+                self[(col, row)] = cofactor / determinant; //stores transposed
             }
         }
     }
@@ -171,7 +184,7 @@ impl VMatrix<4> {
         for row in 0..4 {
             for col in 0..4 {
                 let cofactor: F = self.cofactor(row, col);
-                tgt[col][row] = cofactor / determinant; //stores transposed
+                tgt[(col, row)] = cofactor / determinant; //stores transposed
             }
         }
         tgt
@@ -196,7 +209,7 @@ impl VMatrix<4> {
                     //Skip remove col
                     src_col += 1;
                 }
-                tgt[tgt_row][tgt_col] = self[src_row][src_col];
+                tgt[(tgt_row, tgt_col)] = self[(src_row, src_col)];
                 src_col += 1;
                 tgt_col += 1;
             }
@@ -220,7 +233,7 @@ impl VMatrix<4> {
         let mut determinant: F = 0.0;
 
         for col in 0..4 {
-            determinant = determinant + self[0][col] * self.cofactor(0, col);
+            determinant = determinant + self[(0, col)] * self.cofactor(0, col);
         }
         determinant
     }
@@ -230,22 +243,22 @@ impl ops::Mul<VTuple> for VMatrix<4> {
     type Output = VTuple;
     fn mul(self, other: VTuple) -> Self::Output {
         VTuple::new(
-            self[0][0] * other.x
-                + self[0][1] * other.y
-                + self[0][2] * other.z
-                + self[0][3] * other.w,
-            self[1][0] * other.x
-                + self[1][1] * other.y
-                + self[1][2] * other.z
-                + self[1][3] * other.w,
-            self[2][0] * other.x
-                + self[2][1] * other.y
-                + self[2][2] * other.z
-                + self[2][3] * other.w,
-            self[3][0] * other.x
-                + self[3][1] * other.y
-                + self[3][2] * other.z
-                + self[3][3] * other.w,
+            self[(0, 0)] * other.x
+                + self[(0, 1)] * other.y
+                + self[(0, 2)] * other.z
+                + self[(0, 3)] * other.w,
+            self[(1, 0)] * other.x
+                + self[(1, 1)] * other.y
+                + self[(1, 2)] * other.z
+                + self[(1, 3)] * other.w,
+            self[(2, 0)] * other.x
+                + self[(2, 1)] * other.y
+                + self[(2, 2)] * other.z
+                + self[(2, 3)] * other.w,
+            self[(3, 0)] * other.x
+                + self[(3, 1)] * other.y
+                + self[(3, 2)] * other.z
+                + self[(3, 3)] * other.w,
         )
     }
 }
@@ -273,7 +286,7 @@ impl VMatrix<3> {
                     //Skip remove col
                     src_col += 1;
                 }
-                tgt[tgt_row][tgt_col] = self[src_row][src_col];
+                tgt[(tgt_row, tgt_col)] = self[(src_row, src_col)];
                 src_col += 1;
                 tgt_col += 1;
             }
@@ -297,7 +310,7 @@ impl VMatrix<3> {
         let mut determinant: F = 0.0;
 
         for col in 0..3 {
-            determinant += self[0][col] * self.cofactor(0, col);
+            determinant += self[(0, col)] * self.cofactor(0, col);
         }
         determinant
     }
@@ -307,20 +320,21 @@ _______________________________________ 2x2 specifics __________________________
 */
 impl VMatrix<2> {
     pub fn determinant(self) -> F {
-        self.data[0][0] * self.data[1][1] - self.data[0][1] * self.data[1][0]
+        self.data[(0, 0)] * self.data[(1, 1)] - self.data[(0, 1)] * self.data[(1, 0)]
     }
 }
 
 #[cfg(test)]
 mod test {
     use std::f64::consts::PI;
-    type Matrix4f = VMatrix<4>;
-    type Matrix3f = VMatrix<3>;
-    type Matrix2f = VMatrix<2>;
 
     use crate::tuple::VTuple;
 
     use super::*;
+
+    type Matrix4f = VMatrix<4>;
+    type Matrix3f = VMatrix<3>;
+    type Matrix2f = VMatrix<2>;
 
     #[test]
     fn construcing_and_inspecting_a_4x4_matrix() {
@@ -330,43 +344,43 @@ mod test {
             [9.0, 10.0, 11.0, 12.0],
             [13.5, 14.4, 15.5, 16.5],
         ]);
-        assert_eq!(m[0][0], 1.0);
-        assert_eq!(m[0][1], 2.0);
-        assert_eq!(m[0][2], 3.0);
-        assert_eq!(m[0][3], 4.0);
-        assert_eq!(m[1][0], 5.5);
-        assert_eq!(m[1][1], 6.5);
-        assert_eq!(m[1][2], 7.5);
-        assert_eq!(m[1][3], 8.5);
-        assert_eq!(m[2][0], 9.0);
-        assert_eq!(m[2][1], 10.0);
-        assert_eq!(m[2][2], 11.0);
-        assert_eq!(m[2][3], 12.0);
-        assert_eq!(m[3][0], 13.5);
-        assert_eq!(m[3][1], 14.4);
-        assert_eq!(m[3][2], 15.5);
-        assert_eq!(m[3][3], 16.5);
+        assert_eq!(m[(0, 0)], 1.0);
+        assert_eq!(m[(0, 1)], 2.0);
+        assert_eq!(m[(0, 2)], 3.0);
+        assert_eq!(m[(0, 3)], 4.0);
+        assert_eq!(m[(1, 0)], 5.5);
+        assert_eq!(m[(1, 1)], 6.5);
+        assert_eq!(m[(1, 2)], 7.5);
+        assert_eq!(m[(1, 3)], 8.5);
+        assert_eq!(m[(2, 0)], 9.0);
+        assert_eq!(m[(2, 1)], 10.0);
+        assert_eq!(m[(2, 2)], 11.0);
+        assert_eq!(m[(2, 3)], 12.0);
+        assert_eq!(m[(3, 0)], 13.5);
+        assert_eq!(m[(3, 1)], 14.4);
+        assert_eq!(m[(3, 2)], 15.5);
+        assert_eq!(m[(3, 3)], 16.5);
     }
     #[test]
     fn construcing_and_inspecting_a_3x3_matrix() {
         let m: Matrix3f = Matrix3f::from([[1.0, 2.0, 3.0], [5.5, 6.5, 7.5], [9.0, 10.0, 11.0]]);
-        assert_eq!(m[0][0], 1.0);
-        assert_eq!(m[0][1], 2.0);
-        assert_eq!(m[0][2], 3.0);
-        assert_eq!(m[1][0], 5.5);
-        assert_eq!(m[1][1], 6.5);
-        assert_eq!(m[1][2], 7.5);
-        assert_eq!(m[2][0], 9.0);
-        assert_eq!(m[2][1], 10.0);
-        assert_eq!(m[2][2], 11.0);
+        assert_eq!(m[(0, 0)], 1.0);
+        assert_eq!(m[(0, 1)], 2.0);
+        assert_eq!(m[(0, 2)], 3.0);
+        assert_eq!(m[(1, 0)], 5.5);
+        assert_eq!(m[(1, 1)], 6.5);
+        assert_eq!(m[(1, 2)], 7.5);
+        assert_eq!(m[(2, 0)], 9.0);
+        assert_eq!(m[(2, 1)], 10.0);
+        assert_eq!(m[(2, 2)], 11.0);
     }
     #[test]
     fn construcing_and_inspecting_a_2x2_matrix() {
         let m = VMatrix::from([[1.0, 2.0], [5.5, 6.5]]);
-        assert_eq!(m[0][0], 1.0);
-        assert_eq!(m[0][1], 2.0);
-        assert_eq!(m[1][0], 5.5);
-        assert_eq!(m[1][1], 6.5);
+        assert_eq!(m[(0, 0)], 1.0);
+        assert_eq!(m[(0, 1)], 2.0);
+        assert_eq!(m[(1, 0)], 5.5);
+        assert_eq!(m[(1, 1)], 6.5);
     }
     #[test]
     fn matrix_equality_with_identical_4x4_matrices() {
@@ -654,9 +668,9 @@ mod test {
         ]);
         assert_zeq!(532.0, determinant);
         assert_zeq!(-160.0, cofactor23);
-        assert_zeq!(-160.0 / 532.0, inverse[3][2]);
+        assert_zeq!(-160.0 / 532.0, inverse[(3, 2)]);
         assert_zeq!(105.0, cofactor32);
-        assert_zeq!(105.0 / 532.0, inverse[2][3]);
+        assert_zeq!(105.0 / 532.0, inverse[(2, 3)]);
 
         assert_zeq!(inverse, m);
         assert_zeq!(inverse, expected_result);

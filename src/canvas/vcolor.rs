@@ -1,10 +1,12 @@
 use std::ops;
 
+use serde::Deserialize;
+
 use crate::F;
 
 use crate::zequality::ZEq;
 
-#[derive(Debug, Clone, Copy,PartialEq)]
+#[derive(Debug, Clone, Copy,PartialEq,Deserialize)]
 pub struct VColor
 {
     pub r: F,

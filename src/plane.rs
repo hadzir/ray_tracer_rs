@@ -1,3 +1,5 @@
+use serde::Deserialize;
+
 use crate::EPSILON;
 use crate::body::VBody;
 use crate::body::VIntersectable;
@@ -6,7 +8,7 @@ use crate::matrix::*;
 use crate::ray::VRay;
 use crate::tuple::VTuple;
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq,Deserialize)]
 pub struct VPlane {
     pub transform: VMatrix<4>,
     pub material: VMaterial,

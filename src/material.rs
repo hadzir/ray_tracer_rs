@@ -1,3 +1,5 @@
+use serde::Deserialize;
+
 use crate::light::VPointLight;
 use crate::tuple::VTuple;
 use crate::zequality::ZEq;
@@ -6,7 +8,7 @@ pub trait Illuminated {
     fn lighting(&self, light: VPointLight, pos: VTuple, cam: VTuple, normal: VTuple,shadowed:bool) -> VColor;
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq,Deserialize)]
 
 pub enum VMaterial {
     VPhong(VPhong),
@@ -37,7 +39,7 @@ impl ZEq<VMaterial> for VMaterial {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq,Deserialize)]
 
 pub struct VPhong {
     pub col: VColor,
@@ -124,7 +126,7 @@ impl Illuminated for VPhong {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{canvas::vcolor::VColor, body::VBody, sphere::VSphere};
+    use crate::{canvas::vcolor::VColor};
 
     #[test]
     fn default_phong_material() {
