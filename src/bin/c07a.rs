@@ -25,7 +25,7 @@ fn main() {
         let canvas_width = 600;
         let canvas_height = 400;
 
-        let light_rotation = frame.linear_scale().with_range(0.0, PI * 2.0);
+        let light_rotation = frame.linear_scale().with_range(vec![0.0, PI * 2.0]);
         let light_transform = VMatrix::rotation_y(light_rotation.scale(frame.currentf()));
         let light = VPointLight::new(
             light_transform * VTuple::point(-5.0, 15.0, -10.0),

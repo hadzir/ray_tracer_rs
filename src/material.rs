@@ -128,7 +128,7 @@ mod tests {
         let m = VPhong::default();
 
         assert_zeq!(m.col, VColor::white());
-        assert_zeq!(m.amb, 0.05);
+        assert_zeq!(m.amb, 0.1);
         assert_zeq!(m.dif, 0.9);
         assert_zeq!(m.spc, 0.9);
         assert_zeq!(m.shi, 200.0);
